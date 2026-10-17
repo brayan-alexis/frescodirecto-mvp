@@ -31,3 +31,8 @@ export function rutaInterna(valor: string | null | undefined): string | null {
     return null;
   }
 }
+
+/** ¿El parámetro de ruta tiene forma de UUID? Evita mandar a Postgres un id que rechazaría. */
+export function esUuid(valor: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(valor);
+}
