@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import { ThemeProvider } from "next-themes";
+import { Suspense } from "react";
+import { AvisoAcceso } from "@/components/aviso-acceso";
+import { Encabezado } from "@/components/encabezado";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -9,8 +11,9 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "FrescoDirecto · Pescado del día en Guaymas",
+  description:
+    "Los pescadores de Guaymas publican su captura del día y las marisquerías de Guaymas y San Carlos la piden y la pagan en la app.",
 };
 
 const geistSans = Geist({
@@ -25,16 +28,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+    <html lang="es-MX">
+      <body className={`${geistSans.className} flex min-h-svh flex-col antialiased`}>
+        <Encabezado />
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+          <Suspense fallback={null}>
+            <AvisoAcceso />
+          </Suspense>
           {children}
-        </ThemeProvider>
+        </main>
+        <footer className="border-t px-4 py-6 text-center text-xs text-muted-foreground">
+          MVP académico · Todos los datos son ficticios
+        </footer>
       </body>
     </html>
   );
