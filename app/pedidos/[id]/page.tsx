@@ -1,4 +1,5 @@
 import { AvisoAccionProvider } from "@/components/aviso-accion";
+import { AvisoModoPrueba } from "@/components/aviso-modo-prueba";
 import { BotonActualizar } from "@/components/boton-actualizar";
 import { Cargando } from "@/components/cargando";
 import { ESTADOS_PEDIDO, EtiquetaEstado, textoPago } from "@/components/estado-pedido";
@@ -13,6 +14,7 @@ import { reglaDe24h } from "@/lib/seguimiento";
 import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
 import type { MiPedido, Modalidad } from "@/lib/tipos";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -20,6 +22,9 @@ import { Suspense } from "react";
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+// Título fijo: con el folio habría que leer el pedido también para el <head>.
+export const metadata: Metadata = { title: "Detalle del pedido" };
 
 // Texto neutro: lo leen el restaurante y el pescador.
 const MODALIDAD: Record<Modalidad, string> = {
@@ -146,7 +151,12 @@ async function Contenido({ params }: Props) {
 // Solo muestra montos de mis_pedidos: la base calcula el dinero.
 function Recibo({ pedido }: { pedido: MiPedido }) {
   if (!pedido.recibo) {
-    return <p className="rounded-xl border p-3 text-sm">{textoPago(pedido)}</p>;
+    return (
+      <div className="flex flex-col gap-2 rounded-xl border p-3 text-sm">
+        <p>{textoPago(pedido)}</p>
+        <AvisoModoPrueba />
+      </div>
+    );
   }
 
   const fila = (etiqueta: string, monto: number | null, fuerte = false) =>
@@ -173,6 +183,7 @@ function Recibo({ pedido }: { pedido: MiPedido }) {
         {(pedido.monto_reembolsado ?? 0) > 0 && fila("Reembolsado", pedido.monto_reembolsado)}
       </dl>
       <p className="rounded-md bg-muted px-3 py-2 text-sm font-medium">{textoPago(pedido)}</p>
+      <AvisoModoPrueba />
     </section>
   );
 }

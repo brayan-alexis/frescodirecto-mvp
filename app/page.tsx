@@ -1,3 +1,4 @@
+import { EsqueletoLista } from "@/components/esqueleto-lista";
 import { FiltrosCatalogo } from "@/components/filtros-catalogo";
 import { TarjetaCaptura } from "@/components/tarjeta-captura";
 import { Button } from "@/components/ui/button";
@@ -5,8 +6,12 @@ import { hayFiltros, leerFiltros, urlCatalogo } from "@/lib/filtros-catalogo";
 import { urlFoto } from "@/lib/fotos";
 import { createClient } from "@/lib/supabase/server";
 import type { CapturaCatalogo, FilaEspecie } from "@/lib/tipos";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+
+// La plantilla del layout no aplica a la página de su mismo segmento: va completo.
+export const metadata: Metadata = { title: { absolute: "Catálogo de hoy · FrescoDirecto" } };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -103,26 +108,12 @@ function EstadoVacio({ texto, children }: { texto: string; children: React.React
 function EsqueletoCatalogo() {
   return (
     <div className="flex flex-col gap-4">
-      <p role="status" className="sr-only">
-        Cargando capturas…
-      </p>
       <div aria-hidden className="flex flex-wrap gap-2">
         {[0, 1, 2].map((i) => (
           <div key={i} className="h-11 w-24 rounded-full bg-muted motion-safe:animate-pulse" />
         ))}
       </div>
-      <div aria-hidden className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="flex gap-3 rounded-xl border p-3">
-            <div className="size-20 shrink-0 rounded-md bg-muted motion-safe:animate-pulse" />
-            <div className="flex flex-1 flex-col justify-center gap-2">
-              <div className="h-4 w-24 rounded bg-muted motion-safe:animate-pulse" />
-              <div className="h-3 w-32 rounded bg-muted motion-safe:animate-pulse" />
-              <div className="h-3 w-28 rounded bg-muted motion-safe:animate-pulse" />
-            </div>
-          </div>
-        ))}
-      </div>
+      <EsqueletoLista texto="Cargando capturas…" columnas="sm:grid-cols-2 lg:grid-cols-3" />
     </div>
   );
 }

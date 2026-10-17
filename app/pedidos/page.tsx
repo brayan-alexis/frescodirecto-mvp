@@ -1,16 +1,20 @@
+import { AvisoModoPrueba } from "@/components/aviso-modo-prueba";
 import { BotonActualizar } from "@/components/boton-actualizar";
-import { Cargando } from "@/components/cargando";
+import { EsqueletoLista } from "@/components/esqueleto-lista";
 import { ListaPedidos } from "@/components/lista-pedidos";
 import { Button } from "@/components/ui/button";
 import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
 import type { MiPedido } from "@/lib/tipos";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+export const metadata: Metadata = { title: "Mis pedidos" };
+
 export default function PaginaPedidos() {
   return (
-    <Suspense fallback={<Cargando />}>
+    <Suspense fallback={<EsqueletoLista texto="Cargando tus pedidos…" />}>
       <Contenido />
     </Suspense>
   );
@@ -32,6 +36,7 @@ async function Contenido() {
         <h1 className="text-2xl font-bold">Mis pedidos</h1>
         <BotonActualizar />
       </div>
+      <AvisoModoPrueba />
 
       {error ? (
         <div
@@ -48,7 +53,9 @@ async function Contenido() {
           pedidos={pedidos}
           vacio={
             <>
-              <p className="font-medium">No tienes pedidos activos.</p>
+              <p className="font-medium">
+                {pedidos.length > 0 ? "No tienes pedidos activos." : "Aún no has hecho pedidos."}
+              </p>
               <Button asChild className="h-11">
                 <Link href="/">Ver la captura del día</Link>
               </Button>

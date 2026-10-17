@@ -1,4 +1,4 @@
-import { Cargando } from "@/components/cargando";
+import { EsqueletoLista } from "@/components/esqueleto-lista";
 import { TarjetaMiCaptura } from "@/components/tarjeta-mi-captura";
 import { Button } from "@/components/ui/button";
 import { estadoCaptura } from "@/lib/capturas";
@@ -7,8 +7,11 @@ import { urlFoto } from "@/lib/fotos";
 import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
 import type { MiCaptura, MiCalificacion, ReputacionPescador } from "@/lib/tipos";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+
+export const metadata: Metadata = { title: "Mis capturas" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -18,7 +21,7 @@ const MAX_HISTORIAL = 20;
 
 export default function PaginaPescador({ searchParams }: Props) {
   return (
-    <Suspense fallback={<Cargando />}>
+    <Suspense fallback={<EsqueletoLista texto="Cargando tus capturas…" />}>
       <Contenido searchParams={searchParams} />
     </Suspense>
   );

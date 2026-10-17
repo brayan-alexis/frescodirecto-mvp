@@ -9,7 +9,10 @@ import { createClient } from "@/lib/supabase/server";
 import type { DetalleCaptura } from "@/lib/tipos";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = { title: "Detalle de captura" };
 
 type Props = {
   params: Promise<{ id: string }>;
