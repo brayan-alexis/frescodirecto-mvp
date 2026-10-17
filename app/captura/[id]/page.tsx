@@ -1,3 +1,4 @@
+import { FormularioPedido } from "@/components/formulario-pedido";
 import { FotoCaptura } from "@/components/foto-captura";
 import { Button } from "@/components/ui/button";
 import { formatoDinero, formatoKg, formatoReputacion, haceCuanto, horaSonora } from "@/lib/formato";
@@ -72,7 +73,7 @@ async function Detalle({ params }: Props) {
         Capturada {horaSonora(captura.capturada_en)} (hora de Sonora)
       </p>
       {captura.disponible ? (
-        <ZonaPedido perfil={perfil} capturaId={captura.id} />
+        <ZonaPedido perfil={perfil} captura={captura} />
       ) : (
         <p
           role="status"
@@ -88,17 +89,19 @@ async function Detalle({ params }: Props) {
   );
 }
 
-// Provisional hasta la tarea 04, que pone aquí el formulario de pedido del restaurante.
-function ZonaPedido({ perfil, capturaId }: { perfil: Perfil | null; capturaId: string }) {
+// Solo el restaurante pide; el visitante ve cómo entrar y el pescador o el admin, nada.
+function ZonaPedido({ perfil, captura }: { perfil: Perfil | null; captura: DetalleCaptura }) {
   if (!perfil) {
     return (
       <Button asChild className="h-11">
-        <Link href={`/login?next=/captura/${capturaId}`}>Inicia sesión para pedir</Link>
+        <Link href={`/login?next=/captura/${captura.id}`}>Inicia sesión para pedir</Link>
       </Button>
     );
   }
   if (perfil.rol === "restaurante") {
-    return <p className="text-sm text-muted-foreground">El formulario de pedido llega en la tarea 04</p>;
+    return (
+      <FormularioPedido capturaId={captura.id} especie={captura.especie} precioKg={captura.precio_kg} />
+    );
   }
   return null;
 }
