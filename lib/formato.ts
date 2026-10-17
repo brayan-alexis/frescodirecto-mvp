@@ -55,6 +55,12 @@ export function horaSonora(fechaIso: string, ahora: Date = new Date()): string {
   return `${prefijo} ${hora.format(fecha)}`;
 }
 
+/** "★★★★☆": las estrellas de una calificación de 1 a 5. Acompáñalo de un texto accesible. */
+export function formatoEstrellas(estrellas: number): string {
+  const llenas = Math.min(5, Math.max(0, Math.round(estrellas)));
+  return "★".repeat(llenas) + "☆".repeat(5 - llenas);
+}
+
 /** "★ 4.3 (11)" en tarjetas, "★ 4.3 · 11 calificaciones" en detalle, o "Nuevo" sin promedio público. */
 export function formatoReputacion(
   calificacion: number | null,

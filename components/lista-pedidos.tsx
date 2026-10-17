@@ -1,5 +1,7 @@
 import { AvisoAccionProvider } from "@/components/aviso-accion";
 import { FilaPedido } from "@/components/fila-pedido";
+import { TarjetaCalificacion } from "@/components/tarjeta-calificacion";
+import { separarPorCalificar } from "@/lib/calificaciones";
 import { MAX_HISTORIAL, separarPedidos } from "@/lib/seguimiento";
 import type { MiPedido } from "@/lib/tipos";
 
@@ -9,15 +11,20 @@ type Props = {
   vacio: React.ReactNode;
 };
 
-/** Activos arriba (piden acción) e Historial plegado con los 20 cerrados más recientes. */
+/**
+ * Por calificar (recibidos en las últimas 24 h, solo restaurante), Activos arriba
+ * (piden acción) e Historial plegado con los 20 cerrados más recientes.
+ */
 export function ListaPedidos({ pedidos, vacio }: Props) {
   const { activos, historial } = separarPedidos(pedidos);
+  // Se renderiza después de leer la sesión y mis_pedidos, así que la hora es de esta petición.
+  const { recientes: porCalificar, ids: idsPorCalificar } = separarPorCalificar(pedidos, new Date());
 
   const lista = (filas: MiPedido[], etiqueta: string) => (
     <ul aria-label={etiqueta} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {filas.map((pedido) => (
         <li key={pedido.id}>
-          <FilaPedido pedido={pedido} />
+          <FilaPedido pedido={pedido} sinTarjeta={idsPorCalificar.has(pedido.id)} />
         </li>
       ))}
     </ul>
@@ -25,6 +32,23 @@ export function ListaPedidos({ pedidos, vacio }: Props) {
 
   return (
     <AvisoAccionProvider>
+      {porCalificar.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">Por calificar ({porCalificar.length})</h2>
+          <ul aria-label="Pedidos por calificar" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {porCalificar.map((pedido) => (
+              <li key={pedido.id}>
+                <TarjetaCalificacion
+                  pedidoId={pedido.id}
+                  contraparte={pedido.contraparte}
+                  titulo={`${pedido.folio} · ${pedido.especie}`}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Activos ({activos.length})</h2>
         {activos.length > 0 ? (

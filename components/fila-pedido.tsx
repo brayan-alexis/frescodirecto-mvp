@@ -1,6 +1,7 @@
 import { AccionesPedido } from "@/components/acciones-pedido";
 import { ESTADOS_PEDIDO, EtiquetaEstado, textoPago } from "@/components/estado-pedido";
-import { formatoDinero, formatoKg } from "@/lib/formato";
+import { TarjetaCalificacion } from "@/components/tarjeta-calificacion";
+import { formatoDinero, formatoEstrellas, formatoKg } from "@/lib/formato";
 import { accionDe, reglaDe24h } from "@/lib/seguimiento";
 import type { MiPedido } from "@/lib/tipos";
 import Link from "next/link";
@@ -35,6 +36,25 @@ export function AccionesDe({ pedido }: { pedido: MiPedido }) {
   );
 }
 
+/**
+ * Calificación del pedido para el restaurante: la tarjeta si la base dice `puede_calificar`,
+ * o la que ya dejó, sin opción de cambiarla.
+ */
+export function CalificacionDe({ pedido }: { pedido: MiPedido }) {
+  if (pedido.puede_calificar) {
+    return <TarjetaCalificacion pedidoId={pedido.id} contraparte={pedido.contraparte} />;
+  }
+  if (pedido.mi_papel !== "restaurante" || pedido.calificacion == null) return null;
+  return (
+    <p className="font-medium">
+      Calificaste con{" "}
+      <span role="img" aria-label={`${pedido.calificacion} de 5 estrellas`} className="text-amber-600">
+        {formatoEstrellas(pedido.calificacion)}
+      </span>
+    </p>
+  );
+}
+
 /** Lo que recibe el pescador; no paga comisión. Los montos vienen de mis_pedidos. */
 function montoPescador(pedido: MiPedido): string {
   if (pedido.estado === "rechazado" || pedido.estado === "cancelado") return "Sin cobro";
@@ -42,8 +62,11 @@ function montoPescador(pedido: MiPedido): string {
   return `Recibes ${formatoDinero(pedido.total)}`;
 }
 
-/** Fila de Mis pedidos (restaurante) o Mis ventas (pescador). */
-export function FilaPedido({ pedido }: { pedido: MiPedido }) {
+/**
+ * Fila de Mis pedidos (restaurante) o Mis ventas (pescador).
+ * `sinTarjeta`: el pedido ya tiene su tarjeta en la sección Por calificar.
+ */
+export function FilaPedido({ pedido, sinTarjeta = false }: { pedido: MiPedido; sinTarjeta?: boolean }) {
   const soyRestaurante = pedido.mi_papel === "restaurante";
   const estado = ESTADOS_PEDIDO[pedido.estado];
   const regla = reglaDe24h(pedido);
@@ -75,6 +98,7 @@ export function FilaPedido({ pedido }: { pedido: MiPedido }) {
       </div>
       {regla && <p className="rounded-md bg-muted px-3 py-2">{regla}</p>}
       <AccionesDe pedido={pedido} />
+      {!sinTarjeta && <CalificacionDe pedido={pedido} />}
     </article>
   );
 }
