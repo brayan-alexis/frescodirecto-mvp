@@ -109,6 +109,9 @@ export interface FilaCalificacion {
   creado_en: string;
 }
 
+/** Fila de from('capturas').select('*, especies(nombre)'); la RLS solo devuelve las propias. */
+export type MiCaptura = FilaCaptura & { especies: Pick<FilaEspecie, "nombre"> | null };
+
 // Resultados de las funciones de lectura.
 
 /** Fila de rpc('catalogo_del_dia'). `calificacion` viene vacía con menos de 3 calificaciones. */
