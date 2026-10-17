@@ -39,8 +39,8 @@ export function ForgotPasswordForm({
       });
       if (error) throw error;
       setSuccess(true);
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+    } catch {
+      setError("No se pudo enviar el correo. Intenta de nuevo.");
     } finally {
       setIsLoading(false);
     }
@@ -51,51 +51,57 @@ export function ForgotPasswordForm({
       {success ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Check Your Email</CardTitle>
-            <CardDescription>Password reset instructions sent</CardDescription>
+            <CardTitle className="text-2xl">Revisa tu correo</CardTitle>
+            <CardDescription>Te enviamos las instrucciones</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              If you registered using your email and password, you will receive
-              a password reset email.
+              Si tu cuenta usa correo y contraseña, recibirás un correo para
+              cambiar tu contraseña.
             </p>
           </CardContent>
         </Card>
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Reset Your Password</CardTitle>
+            <CardTitle className="text-2xl">Recuperar contraseña</CardTitle>
             <CardDescription>
-              Type in your email and we&apos;ll send you a link to reset your
-              password
+              Escribe tu correo y te enviaremos un enlace para cambiar tu
+              contraseña.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleForgotPassword}>
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Correo</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
+                    autoComplete="email"
                     required
+                    className="h-11"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send reset email"}
+                {error && (
+                  <p role="alert" className="text-sm text-red-500">
+                    {error}
+                  </p>
+                )}
+                <Button
+                  type="submit"
+                  className="h-11 w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Enviando…" : "Enviar enlace"}
                 </Button>
               </div>
               <div className="mt-4 text-center text-sm">
-                Already have an account?{" "}
-                <Link
-                  href="/auth/login"
-                  className="underline underline-offset-4"
-                >
-                  Login
+                ¿Ya tienes cuenta?{" "}
+                <Link href="/login" className="underline underline-offset-4">
+                  Entrar
                 </Link>
               </div>
             </form>
