@@ -17,9 +17,9 @@ Coloca aquí seis fotos en formato JPG, con estos nombres exactos:
 
 ## Fuentes de las fotos
 
-- sierra.jpg:
-- huachinango.jpg:
-- cabrilla.jpg:
-- pargo.jpg:
-- corvina.jpg:
-- lenguado.jpg:
+- sierra.jpg: imagen generada con IA (ChatGPT)
+- huachinango.jpg: imagen generada con IA (ChatGPT)
+- cabrilla.jpg: imagen generada con IA (ChatGPT)
+- pargo.jpg: imagen generada con IA (ChatGPT)
+- corvina.jpg: imagen generada con IA (ChatGPT)
+- lenguado.jpg: imagen generada con IA (ChatGPT)
