@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatoDinero, formatoKg, haceCuanto, horaSonora, formatoReputacion } from "./formato.ts";
+import {
+  formatoDinero,
+  formatoEstrellas,
+  formatoKg,
+  haceCuanto,
+  horaSonora,
+  formatoReputacion,
+} from "./formato.ts";
 
 test("formatoDinero: sin decimales si el monto es entero", () => {
   assert.equal(formatoDinero(95), "$95");
@@ -36,4 +43,10 @@ test("formatoReputacion: promedio con 3 o más calificaciones; si no, Nuevo", ()
   assert.equal(formatoReputacion(4.3, 11, "larga"), "★ 4.3 · 11 calificaciones");
   assert.equal(formatoReputacion(4, 10, "corta"), "★ 4.0 (10)");
   assert.equal(formatoReputacion(null, 2, "larga"), "Nuevo");
+});
+
+test("formatoEstrellas: llenas y vacías hasta 5", () => {
+  assert.equal(formatoEstrellas(5), "★★★★★");
+  assert.equal(formatoEstrellas(4), "★★★★☆");
+  assert.equal(formatoEstrellas(1), "★☆☆☆☆");
 });

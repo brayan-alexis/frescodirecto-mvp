@@ -2,7 +2,7 @@ import { AvisoAccionProvider } from "@/components/aviso-accion";
 import { BotonActualizar } from "@/components/boton-actualizar";
 import { Cargando } from "@/components/cargando";
 import { ESTADOS_PEDIDO, EtiquetaEstado, textoPago } from "@/components/estado-pedido";
-import { AccionesDe, TelefonoContraparte } from "@/components/fila-pedido";
+import { AccionesDe, CalificacionDe, TelefonoContraparte } from "@/components/fila-pedido";
 import { FotoCaptura } from "@/components/foto-captura";
 import { LineaTiempo, type EventoPedido } from "@/components/linea-tiempo";
 import { Button } from "@/components/ui/button";
@@ -133,6 +133,8 @@ async function Contenido({ params }: Props) {
       <AvisoAccionProvider>
         {regla && <p className="rounded-md bg-muted px-3 py-2 text-sm">{regla}</p>}
         <AccionesDe pedido={pedido} />
+        {/* Tras "Recibido conforme", router.refresh() trae puede_calificar y aparece la tarjeta. */}
+        <CalificacionDe pedido={pedido} />
       </AvisoAccionProvider>
 
       <Recibo pedido={pedido} />

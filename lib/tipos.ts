@@ -167,6 +167,12 @@ export interface MiPedido {
   puede_calificar: boolean;
 }
 
+/** Fila de rpc('reputacion_pescador'). `calificacion` viene vacía con menos de 3 calificaciones. */
+export interface ReputacionPescador {
+  calificacion: number | null;
+  num_calificaciones: number;
+}
+
 /** Fila de rpc('mis_calificaciones'). Los comentarios solo los ve el pescador dueño. */
 export interface MiCalificacion {
   folio: string;

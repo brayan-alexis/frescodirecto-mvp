@@ -2,10 +2,11 @@ import { Cargando } from "@/components/cargando";
 import { TarjetaMiCaptura } from "@/components/tarjeta-mi-captura";
 import { Button } from "@/components/ui/button";
 import { estadoCaptura } from "@/lib/capturas";
+import { formatoEstrellas, formatoReputacion, horaSonora } from "@/lib/formato";
 import { urlFoto } from "@/lib/fotos";
 import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
-import type { MiCaptura } from "@/lib/tipos";
+import type { MiCaptura, MiCalificacion, ReputacionPescador } from "@/lib/tipos";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -30,13 +31,18 @@ async function Contenido({ searchParams }: Props) {
   const aprobado = perfil.estado === "aprobado";
 
   // La política "Capturas propias o admin" solo devuelve las del pescador.
+  // mis_calificaciones solo devuelve las suyas, con comentario: no son públicas.
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("capturas")
-    .select("*, especies(nombre)")
-    .order("publicada_en", { ascending: false })
-    .limit(50)
-    .overrideTypes<MiCaptura[], { merge: false }>();
+  const [{ data, error }, reputacion, calificaciones] = await Promise.all([
+    supabase
+      .from("capturas")
+      .select("*, especies(nombre)")
+      .order("publicada_en", { ascending: false })
+      .limit(50)
+      .overrideTypes<MiCaptura[], { merge: false }>(),
+    supabase.rpc("reputacion_pescador", { p_pescador_id: perfil.id }).single<ReputacionPescador>(),
+    supabase.rpc("mis_calificaciones").limit(MAX_HISTORIAL),
+  ]);
   const ahora = new Date();
 
   const botonPublicar = aprobado && (
@@ -51,6 +57,14 @@ async function Contenido({ searchParams }: Props) {
         <h1 className="text-2xl font-bold">Mis capturas</h1>
         {botonPublicar}
       </div>
+
+      {reputacion.error || calificaciones.error ? (
+        <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900">
+          No pudimos cargar tu reputación. Recarga la página para intentarlo de nuevo.
+        </p>
+      ) : (
+        <Reputacion reputacion={reputacion.data} calificaciones={calificaciones.data ?? []} />
+      )}
 
       {publicada === "1" && (
         <p
@@ -80,6 +94,54 @@ async function Contenido({ searchParams }: Props) {
         />
       )}
     </div>
+  );
+}
+
+/** Promedio público (con 3 o más) y los comentarios, que solo ve el pescador dueño. */
+function Reputacion({
+  reputacion,
+  calificaciones,
+}: {
+  reputacion: ReputacionPescador;
+  calificaciones: MiCalificacion[];
+}) {
+  return (
+    <section aria-labelledby="titulo-reputacion" className="flex flex-col gap-2 rounded-xl border p-3 text-sm">
+      <h2 id="titulo-reputacion" className="text-base font-semibold">
+        {reputacion.calificacion != null
+          ? `Tu reputación: ${formatoReputacion(reputacion.calificacion, reputacion.num_calificaciones, "larga")}`
+          : "Aún no tienes promedio público: se muestra con 3 calificaciones"}
+      </h2>
+      {reputacion.calificacion == null && (
+        <p className="text-muted-foreground">
+          Llevas {reputacion.num_calificaciones} de 3. Mientras tanto, el catálogo te muestra como Nuevo.
+        </p>
+      )}
+
+      {calificaciones.length > 0 && (
+        <details className="rounded-md border">
+          <summary className="flex min-h-11 cursor-pointer items-center px-3 font-semibold">
+            Lo que dicen los restaurantes ({calificaciones.length === MAX_HISTORIAL ? `últimas ${MAX_HISTORIAL}` : calificaciones.length})
+          </summary>
+          <ul aria-label="Calificaciones recibidas" className="flex flex-col divide-y px-3 pb-1">
+            {calificaciones.map((c) => (
+              <li key={c.folio} className="flex flex-col gap-0.5 py-2">
+                <p>
+                  <span role="img" aria-label={`${c.estrellas} de 5 estrellas`} className="text-amber-600">
+                    {formatoEstrellas(c.estrellas)}
+                  </span>{" "}
+                  · {c.restaurante}
+                </p>
+                <p>{c.comentario ?? <span className="text-muted-foreground">Sin comentario</span>}</p>
+                <p className="text-muted-foreground">
+                  {c.folio} · {c.especie} · {horaSonora(c.creado_en)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+    </section>
   );
 }
 
