@@ -6,7 +6,10 @@ import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
 import type { FilaEspecie } from "@/lib/tipos";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = { title: "Publicar captura" };
 
 export default function PaginaPublicar() {
   return (

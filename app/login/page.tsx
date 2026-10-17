@@ -1,6 +1,9 @@
 import { Cargando } from "@/components/cargando";
 import { FormularioLogin } from "@/components/formulario-login";
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = { title: "Entrar" };
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;

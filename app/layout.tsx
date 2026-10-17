@@ -11,7 +11,11 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "FrescoDirecto · Pescado del día en Guaymas",
+  // Cada página pone su título y la plantilla agrega la marca: "Mis pedidos · FrescoDirecto".
+  title: {
+    default: "FrescoDirecto · Pescado del día en Guaymas",
+    template: "%s · FrescoDirecto",
+  },
   description:
     "Los pescadores de Guaymas publican su captura del día y las marisquerías de Guaymas y San Carlos la piden y la pagan en la app.",
 };

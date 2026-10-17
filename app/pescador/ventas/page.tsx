@@ -1,5 +1,6 @@
+import { AvisoModoPrueba } from "@/components/aviso-modo-prueba";
 import { BotonActualizar } from "@/components/boton-actualizar";
-import { Cargando } from "@/components/cargando";
+import { EsqueletoLista } from "@/components/esqueleto-lista";
 import { ListaPedidos } from "@/components/lista-pedidos";
 import { Button } from "@/components/ui/button";
 import { formatoDinero } from "@/lib/formato";
@@ -7,12 +8,15 @@ import { resumenVentas } from "@/lib/seguimiento";
 import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
 import type { MiPedido } from "@/lib/tipos";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+export const metadata: Metadata = { title: "Mis ventas" };
+
 export default function PaginaVentas() {
   return (
-    <Suspense fallback={<Cargando />}>
+    <Suspense fallback={<EsqueletoLista texto="Cargando tus ventas…" />}>
       <Contenido />
     </Suspense>
   );
@@ -36,6 +40,7 @@ async function Contenido() {
         <h1 className="text-2xl font-bold">Mis ventas</h1>
         <BotonActualizar />
       </div>
+      <AvisoModoPrueba />
 
       {error ? (
         <div

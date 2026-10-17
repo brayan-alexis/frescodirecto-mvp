@@ -1,5 +1,6 @@
 "use client";
 
+import { AvisoModoPrueba } from "@/components/aviso-modo-prueba";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -237,9 +238,7 @@ export function FormularioPedido({ capturaId, especie, precioKg }: Props) {
               )}
             </div>
 
-            <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-center text-sm font-medium text-amber-900">
-              Modo de prueba: no se cobra dinero real
-            </p>
+            <AvisoModoPrueba />
 
             <div className="flex flex-col gap-2">
               <Button type="submit" className="h-11 w-full text-base" disabled={enviando}>
