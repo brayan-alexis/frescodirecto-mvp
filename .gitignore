@@ -40,3 +40,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+Add-Content -Path .gitignore -Value @"
+
+# Documentación del proyecto y archivos de Claude Code: solo locales, no se suben al repo
+AGENTS.md
+CLAUDE.md
+.claude/
+CONTRIBUTING.md
+docs/arquitectura.md
+docs/datos-y-roles.md
+docs/decisiones.md
+docs/estados-pedido.md
+docs/modelo-datos.md
+docs/img/
+docs/tareas/
+"@

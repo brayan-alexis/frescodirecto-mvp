@@ -1,0 +1,29 @@
+# Supabase pausa los proyectos gratuitos con poca actividad durante 7 días.
+# Esta tarea consulta el catálogo cada 2 días para que la base registre actividad
+# real hasta las demos de diciembre.
+#
+# Requisito: Settings → Secrets and variables → Actions → New repository secret
+#   SUPABASE_URL              (Project URL)
+#   SUPABASE_PUBLISHABLE_KEY  (publishable key; nunca la secret key)
+name: mantener-activo
+
+on:
+  schedule:
+    - cron: '17 15 */2 * *'   # 15:17 UTC = 08:17 en Sonora, cada 2 días
+  workflow_dispatch:           # también se puede lanzar a mano desde Actions
+
+jobs:
+  consultar-catalogo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consultar el catálogo del día
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          curl --fail --silent --show-error \
+            -X POST "$SUPABASE_URL/rest/v1/rpc/catalogo_del_dia" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}' -o /dev/null
+          echo "Catálogo consultado: el proyecto registró actividad."

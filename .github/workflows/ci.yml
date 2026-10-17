@@ -1,0 +1,21 @@
+# Revisión automática de cada pull request: estilo (lint) y tipos de TypeScript.
+# El build completo lo hace Vercel en la vista previa del PR.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit

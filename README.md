@@ -1,109 +1,59 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# FrescoDirecto IA · MVP
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+Marketplace B2B de pescado del día para marisquerías de Guaymas y San Carlos, Sonora. El pescador publica su captura desde el teléfono. El restaurante pide los kg exactos y paga en la app. FrescoDirecto retiene el pago hasta que el restaurante confirma la recepción, y después el restaurante califica al pescador.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+Proyecto de Global Project · Maestría en Inteligencia Artificial Centrada en la Sociedad (ITSON), 2026.
+Equipo: Marco Antonio Blasco Esquer, Brayan Alexis Fajardo Ortiz e Itzel Yacquelin Beltrán Reyes.
 
-## Features
+- **App en línea:** https://‹proyecto›.vercel.app
+- **Versión entregada:** `v1.0.0` (20 de octubre de 2026)
+- **Todos los datos son ficticios. Los pagos usan una pasarela de prueba: no se cobra dinero real.**
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+## Funciones del MVP
 
-## Demo
+| Función | Quién | Qué hace |
+| --- | --- | --- |
+| F1. Publicar captura | Pescador aprobado | Especie, kg, precio, hora y foto. La hora de publicación la pone el servidor |
+| F2. Catálogo del día | Cualquiera | Capturas de menos de 24 h con kg disponibles, con filtros por especie, precio y horas, y la reputación del pescador |
+| F3. Pedido con pago protegido | Restaurante | Descuenta los kg sin sobreventa, cobra en la app (valor del pescado más 5 % de comisión) y retiene el pago |
+| F4. Seguimiento y recepción | Pescador y restaurante | El pescador acepta o rechaza y marca entregado. El restaurante confirma conforme, lo que libera el pago, o reporta una incidencia, que deja el pago en disputa |
+| F5. Calificación del pescador | Restaurante | De 1 a 5 estrellas después de recibir; promedio público con 3 o más calificaciones |
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+Soporte: registro con rol, aprobación de pescadores, resolución de disputas y reinicio de la demo desde `/admin`.
 
-## Deploy to Vercel
+## Stack
 
-Vercel deployment will guide you through creating a Supabase account and project.
+Next.js 16 (App Router, TypeScript, Tailwind) en Vercel · Supabase (Postgres con RLS, Auth, Storage, Cron) · GitHub Actions.
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+## Configuración desde cero
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+1. **Requisitos:** cuentas gratuitas de GitHub, Vercel y Supabase; Node.js 20.9 o superior; Git.
+2. **Esquema:** en Supabase → New project → SQL Editor, ejecutar en orden los tres archivos de `supabase/migrations/`.
+3. **Correo:** Authentication → Sign In / Providers → Email → desactivar **Confirm email**.
+4. **Variables:** copiar `.env.example` como `.env.local` y llenarlas. Las llaves están en el botón Connect y en Project Settings → API Keys.
+5. **Cuentas demo:** `npm install` y luego `node --env-file=.env.local scripts/crear-usuarios-demo.mjs`. Crea 8 cuentas y sube las fotos de `supabase/seed-fotos/`.
+6. **Escenario demo:** en el SQL Editor, `select public.cargar_datos_demo();`. Debe responder "Escenario demo listo: 5 capturas en el catálogo de hoy, … pedidos pagados en la app, … calificaciones y 1 disputa abierta."
+7. **Tareas programadas:** Integrations → Cron → habilitar pg_cron y ejecutar `supabase/cron_reinicio_demo.sql`. Programa el reinicio diario de la demo a las 05:00 y los vencimientos de pagos cada hora.
+8. **Ejecutar:** en local, `npm run dev` y abrir http://localhost:3000. En línea, importar el repo en Vercel con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+## Probar
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+- **Pago de prueba:**
+  - la tarjeta terminación **4242** se aprueba;
+  - la **0002** se rechaza, y en ese caso no se crea pedido ni se aparta producto.
 
-## Clone and run locally
+  La app nunca pide números de tarjeta.
+- **Automática (reglas, permisos y dinero):** pegar `supabase/pruebas/pruebas_reglas.sql` en el SQL Editor. Con `psql` se ven 32 avisos "cumple"; el SQL Editor suele mostrar solo "Success. No rows returned". En ambos casos, éxito = ningún error. No deja cambios.
+- **Reiniciar el escenario:** `select public.cargar_datos_demo();` o el botón Reiniciar demo del administrador.
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+## Cuentas demo
 
-2. Create a Next.js app using the Supabase Starter template npx command
+| Cuenta | Rol |
+| --- | --- |
+| `fd.restaurante1@example.com` | Restaurante (Martha Leyva, Marisquería El Muelle) |
+| `fd.restaurante2@example.com`, `fd.restaurante3@example.com` | Restaurantes |
+| `fd.pescador1@example.com` a `fd.pescador3@example.com` | Pescadores aprobados |
+| `fd.pescador4@example.com` | Pescador pendiente de aprobación |
+| `fd.admin@example.com` | Administrador |
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
-
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
-
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
-
-3. Use `cd` to change into the app's directory
-
-   ```bash
-   cd with-supabase-app
-   ```
-
-4. Rename `.env.example` to `.env.local` and update the following:
-
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
-
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
-
-5. You can now run the Next.js local development server:
-
-   ```bash
-   npm run dev
-   ```
-
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
-
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
-
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
-
-## Feedback and issues
-
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
-
-## More Supabase examples
-
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+La contraseña común se comparte solo por el medio acordado con la docente.
