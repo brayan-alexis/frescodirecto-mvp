@@ -1,10 +1,15 @@
+import { AvisoAccionProvider } from "@/components/aviso-accion";
+import { BotonActualizar } from "@/components/boton-actualizar";
 import { Cargando } from "@/components/cargando";
 import { ESTADOS_PEDIDO, EtiquetaEstado, textoPago } from "@/components/estado-pedido";
+import { AccionesDe, TelefonoContraparte } from "@/components/fila-pedido";
 import { FotoCaptura } from "@/components/foto-captura";
+import { LineaTiempo, type EventoPedido } from "@/components/linea-tiempo";
 import { Button } from "@/components/ui/button";
 import { formatoDinero, formatoKg, horaSonora } from "@/lib/formato";
 import { urlFoto } from "@/lib/fotos";
 import { esUuid } from "@/lib/rutas";
+import { reglaDe24h } from "@/lib/seguimiento";
 import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
 import type { MiPedido, Modalidad } from "@/lib/tipos";
@@ -38,12 +43,18 @@ async function Contenido({ params }: Props) {
   if (!esUuid(id)) notFound();
 
   const supabase = await createClient();
-  const { data: pedido, error } = await supabase
-    .rpc("mis_pedidos")
-    .eq("id", id)
-    .maybeSingle<MiPedido>();
+  const [{ data: pedido, error }, { data: eventos, error: errorEventos }] = await Promise.all([
+    supabase.rpc("mis_pedidos").eq("id", id).maybeSingle<MiPedido>(),
+    // La política "Eventos de mis pedidos o admin" solo deja leer los de pedidos propios.
+    supabase
+      .from("pedido_eventos")
+      .select("estado, nota, actor_id, creado_en")
+      .eq("pedido_id", id)
+      .order("creado_en")
+      .overrideTypes<EventoPedido[], { merge: false }>(),
+  ]);
 
-  if (error) {
+  if (error || errorEventos) {
     return (
       <div
         role="alert"
@@ -60,15 +71,19 @@ async function Contenido({ params }: Props) {
 
   const soyRestaurante = pedido.mi_papel === "restaurante";
   const estado = ESTADOS_PEDIDO[pedido.estado];
+  const regla = reglaDe24h(pedido);
 
   return (
     <article className="mx-auto flex w-full max-w-xl flex-col gap-4">
-      <Link
-        href={soyRestaurante ? "/pedidos" : "/pescador/ventas"}
-        className="inline-flex min-h-11 items-center self-start text-sm font-medium underline-offset-4 hover:underline"
-      >
-        ← {soyRestaurante ? "Mis pedidos" : "Mis ventas"}
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href={soyRestaurante ? "/pedidos" : "/pescador/ventas"}
+          className="inline-flex min-h-11 items-center text-sm font-medium underline-offset-4 hover:underline"
+        >
+          ← {soyRestaurante ? "Mis pedidos" : "Mis ventas"}
+        </Link>
+        <BotonActualizar />
+      </div>
 
       <header className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -98,12 +113,30 @@ async function Contenido({ params }: Props) {
           {soyRestaurante ? "Pescador" : "Restaurante"}: {pedido.contraparte}
           {pedido.contraparte_negocio && ` · ${pedido.contraparte_negocio}`}
         </p>
+        <TelefonoContraparte telefono={pedido.contraparte_telefono} />
         <p className="text-muted-foreground">
           Pedido {horaSonora(pedido.creado_en)} (hora de Sonora)
         </p>
       </div>
 
+      {pedido.motivo_rechazo && (
+        <p className="rounded-xl border p-3 text-sm">
+          <strong>Motivo del rechazo:</strong> {pedido.motivo_rechazo}
+        </p>
+      )}
+      {pedido.nota_incidencia && (
+        <p className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-900">
+          <strong>Incidencia:</strong> {pedido.nota_incidencia}
+        </p>
+      )}
+
+      <AvisoAccionProvider>
+        {regla && <p className="rounded-md bg-muted px-3 py-2 text-sm">{regla}</p>}
+        <AccionesDe pedido={pedido} />
+      </AvisoAccionProvider>
+
       <Recibo pedido={pedido} />
+      <LineaTiempo eventos={eventos ?? []} />
     </article>
   );
 }
