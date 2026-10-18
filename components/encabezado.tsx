@@ -28,7 +28,7 @@ const ENLACES: Record<Rol | "visitante", { href: string; texto: string }[]> = {
 export function Encabezado() {
   return (
     <header className="border-b">
-      <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-4 px-4 py-1">
+      <div className="mx-auto flex w-full max-w-[480px] flex-wrap items-center justify-between gap-x-4 px-4 py-1">
         <Link href="/" className="inline-flex min-h-11 items-center text-lg font-bold">
           FrescoDirecto
         </Link>

@@ -2,33 +2,163 @@
 @tailwind components;
 @tailwind utilities;
 
+/* FrescoDirecto · tokens de diseño (docs/ui/sistema-diseno.md).
+   El proyecto usa Tailwind 3: los tokens viven aquí como variables CSS y
+   tailwind.config.ts los convierte en utilidades (bg-surface, text-ink-muted, bg-boya…).
+   Tema oscuro: data-theme="dark", clase .dark o prefers-color-scheme. */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --color-bg: #eef2f4;
+    --color-surface: #ffffff;
+    --color-surface-sunken: #e3e9ed;
+    --color-line: #cbd4dc;
+    --color-line-strong: #7c8a9b;
+    --color-ink: #121a2b;
+    --color-ink-muted: #4e5a6c;
+    --color-marea: #16233f;
+    --color-on-marea: #ffffff;
+    --color-marea-soft: #dce3ee;
+    --color-boya: #c2451c;
+    --color-boya-hover: #a23815;
+    --color-on-boya: #ffffff;
+    --color-fresco: #0a7465;
+    --color-fresco-soft: #d9f0ec;
+    --color-alerta: #8a5300;
+    --color-alerta-soft: #fbefd3;
+    --color-error: #b42318;
+    --color-error-soft: #fce4e1;
+    --color-focus: #c2451c;
+    --color-solicitado: #7a4a00;
+    --color-solicitado-soft: #fbefd3;
+    --color-aceptado: #1d4a94;
+    --color-aceptado-soft: #e1eaf8;
+    --color-entregado: #0a5f55;
+    --color-entregado-soft: #d9f0ec;
+    --color-recibido: #1e6532;
+    --color-recibido-soft: #ddefe0;
+    --color-incidencia: #9e2418;
+    --color-incidencia-soft: #fce4e1;
+    --color-rechazado: #6e3b35;
+    --color-rechazado-soft: #f0e3e1;
+    --color-cancelado: #4a5464;
+    --color-cancelado-soft: #e6eaee;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --shadow-card: 0 1px 2px rgba(18, 26, 43, 0.06), 0 4px 12px rgba(18, 26, 43, 0.06);
+    --shadow-bar: 0 -1px 0 rgba(18, 26, 43, 0.08), 0 -6px 16px rgba(18, 26, 43, 0.06);
+
+    /* Variables de shadcn reasignadas a los tokens, para que components/ui/ se vea igual
+       que el resto. Son alias: el tema oscuro las cambia al redefinir los --color-*. */
+    --background: var(--color-bg);
+    --foreground: var(--color-ink);
+    --card: var(--color-surface);
+    --card-foreground: var(--color-ink);
+    --popover: var(--color-surface);
+    --popover-foreground: var(--color-ink);
+    --primary: var(--color-boya);
+    --primary-foreground: var(--color-on-boya);
+    --secondary: var(--color-surface-sunken);
+    --secondary-foreground: var(--color-ink);
+    --muted: var(--color-surface-sunken);
+    --muted-foreground: var(--color-ink-muted);
+    --accent: var(--color-marea-soft);
+    --accent-foreground: var(--color-ink);
+    --destructive: var(--color-error);
+    --destructive-foreground: var(--color-surface);
+    --border: var(--color-line);
+    --input: var(--color-line-strong);
+    --ring: var(--color-focus);
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 10px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]):not(.light) {
+      --color-bg: #0b1322;
+      --color-surface: #131e31;
+      --color-surface-sunken: #0f1829;
+      --color-line: #26354b;
+      --color-line-strong: #6b7d96;
+      --color-ink: #e9eff6;
+      --color-ink-muted: #a3b0c2;
+      --color-marea: #1b2d50;
+      --color-on-marea: #ffffff;
+      --color-marea-soft: #26385c;
+      --color-boya: #ff8a5b;
+      --color-boya-hover: #ffa37e;
+      --color-on-boya: #1e0b03;
+      --color-fresco: #4ccdb9;
+      --color-fresco-soft: #0f3530;
+      --color-alerta: #f2b65a;
+      --color-alerta-soft: #3a2a0e;
+      --color-error: #ff8a7d;
+      --color-error-soft: #3d1714;
+      --color-focus: #ff8a5b;
+      --color-solicitado: #f6c877;
+      --color-solicitado-soft: #3a2a0e;
+      --color-aceptado: #9dbdf5;
+      --color-aceptado-soft: #16294a;
+      --color-entregado: #7fdccb;
+      --color-entregado-soft: #0f3530;
+      --color-recibido: #8fd8a0;
+      --color-recibido-soft: #13331c;
+      --color-incidencia: #ffa195;
+      --color-incidencia-soft: #3d1714;
+      --color-rechazado: #e0b2ac;
+      --color-rechazado-soft: #33201e;
+      --color-cancelado: #b5c0cf;
+      --color-cancelado-soft: #1f2a3a;
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5);
+      --shadow-bar: 0 -1px 0 rgba(255, 255, 255, 0.06);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"],
+  :root.dark {
+    --color-bg: #0b1322;
+    --color-surface: #131e31;
+    --color-surface-sunken: #0f1829;
+    --color-line: #26354b;
+    --color-line-strong: #6b7d96;
+    --color-ink: #e9eff6;
+    --color-ink-muted: #a3b0c2;
+    --color-marea: #1b2d50;
+    --color-on-marea: #ffffff;
+    --color-marea-soft: #26385c;
+    --color-boya: #ff8a5b;
+    --color-boya-hover: #ffa37e;
+    --color-on-boya: #1e0b03;
+    --color-fresco: #4ccdb9;
+    --color-fresco-soft: #0f3530;
+    --color-alerta: #f2b65a;
+    --color-alerta-soft: #3a2a0e;
+    --color-error: #ff8a7d;
+    --color-error-soft: #3d1714;
+    --color-focus: #ff8a5b;
+    --color-solicitado: #f6c877;
+    --color-solicitado-soft: #3a2a0e;
+    --color-aceptado: #9dbdf5;
+    --color-aceptado-soft: #16294a;
+    --color-entregado: #7fdccb;
+    --color-entregado-soft: #0f3530;
+    --color-recibido: #8fd8a0;
+    --color-recibido-soft: #13331c;
+    --color-incidencia: #ffa195;
+    --color-incidencia-soft: #3d1714;
+    --color-rechazado: #e0b2ac;
+    --color-rechazado-soft: #33201e;
+    --color-cancelado: #b5c0cf;
+    --color-cancelado-soft: #1f2a3a;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-bar: 0 -1px 0 rgba(255, 255, 255, 0.06);
+    color-scheme: dark;
   }
 }
 
@@ -37,6 +167,21 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-bg font-sans text-ink antialiased;
+  }
+  :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      transition-duration: 1ms !important;
+    }
   }
 }
