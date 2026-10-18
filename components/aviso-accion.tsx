@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleCheck } from "lucide-react";
 import { createContext, useContext, useState } from "react";
 
 // La confirmación vive fuera de las filas: tras router.refresh() el pedido puede
@@ -12,8 +13,17 @@ export function AvisoAccionProvider({ children }: { children: React.ReactNode })
 
   return (
     <ContextoAviso.Provider value={setAviso}>
-      <p role="status" className={aviso ? "rounded-md border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900" : "sr-only"}>
-        {aviso}
+      {/* Con el estilo de Aviso éxito (components/fd/aviso.tsx); el role="status" siempre está para que se anuncie. */}
+      <p
+        role="status"
+        className={
+          aviso
+            ? "grid grid-cols-[20px_minmax(0,1fr)] gap-3 rounded-lg bg-fresco-soft px-4 py-3 text-base font-bold text-ink"
+            : "sr-only"
+        }
+      >
+        {aviso && <CircleCheck aria-hidden className="mt-0.5 size-5 text-fresco" />}
+        {aviso && <span>{aviso}</span>}
       </p>
       {children}
     </ContextoAviso.Provider>

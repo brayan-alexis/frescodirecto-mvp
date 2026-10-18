@@ -1,36 +1,33 @@
 // Formatos de pantalla compartidos: dinero y kg en es-MX, horas en hora de Sonora.
 // La base guarda UTC; aquí solo se presenta. Llama estas funciones en el servidor.
 
-const ZONA = "America/Hermosillo";
+/** Zona horaria de Sonora: no cambia de horario en verano. */
+export const TZ = "America/Hermosillo";
+const HORA_MS = 60 * 60 * 1000;
 
-const dineroEntero = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-const dineroCentavos = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+const dinero = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
 const numeroKg = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2 });
 const numeroCalificacion = new Intl.NumberFormat("es-MX", {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 });
-const hora = new Intl.DateTimeFormat("es-MX", { timeZone: ZONA, hour: "numeric", minute: "2-digit" });
-const fechaCorta = new Intl.DateTimeFormat("es-MX", { timeZone: ZONA, day: "numeric", month: "short" });
+const hora = new Intl.DateTimeFormat("es-MX", { timeZone: TZ, hour: "numeric", minute: "2-digit" });
+const fechaCorta = new Intl.DateTimeFormat("es-MX", { timeZone: TZ, day: "numeric", month: "short" });
+const hora24 = new Intl.DateTimeFormat("es-MX", {
+  timeZone: TZ,
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
 // en-CA da AAAA-MM-DD: sirve para comparar días de calendario en Sonora.
-const claveDia = new Intl.DateTimeFormat("en-CA", { timeZone: ZONA });
+const claveDia = new Intl.DateTimeFormat("en-CA", { timeZone: TZ });
 
-/** "$95" o "$1,250.50": sin decimales si el monto es entero. */
+/** "$95.00" o "$1,250.50": siempre con centavos (docs/ui/sistema-diseno.md). */
 export function formatoDinero(monto: number): string {
-  return (Number.isInteger(monto) ? dineroEntero : dineroCentavos).format(monto);
+  return dinero.format(monto);
 }
 
-/** "12.5 kg", con hasta 2 decimales. */
+/** "12.5 kg" o "30 kg": hasta 2 decimales, los mismos que guarda la base (numeric(7,2)). */
 export function formatoKg(kg: number): string {
   return `${numeroKg.format(kg)} kg`;
 }
@@ -39,6 +36,23 @@ export function formatoKg(kg: number): string {
 export function haceCuanto(horas: number): string {
   const minutos = Math.max(1, Math.round(horas * 60));
   return minutos < 60 ? `hace ${minutos} min` : `hace ${Math.floor(minutos / 60)} h`;
+}
+
+/** "hace 40 min" o "hace 3 h" desde una fecha ISO. */
+export function horasDesde(fechaIso: string, ahora: Date = new Date()): string {
+  return haceCuanto((ahora.getTime() - new Date(fechaIso).getTime()) / HORA_MS);
+}
+
+/** Horas enteras que le quedan a una captura en el catálogo de 24 h (mínimo 0). */
+export function horasRestantes(capturadaEnIso: string, ahora: Date = new Date()): number {
+  const pasadas = (ahora.getTime() - new Date(capturadaEnIso).getTime()) / HORA_MS;
+  return Math.max(0, Math.floor(24 - pasadas));
+}
+
+/** "06:52 · 17 oct" en hora de Sonora: la hora exacta de la línea de tiempo. */
+export function horaExacta(fechaIso: string): string {
+  const fecha = new Date(fechaIso);
+  return `${hora24.format(fecha)} · ${fechaCorta.format(fecha)}`;
 }
 
 /** "hoy 5:40 a.m.", "ayer 10:20 p.m." o "14 oct 6:00 a.m.", en hora de Sonora. */
