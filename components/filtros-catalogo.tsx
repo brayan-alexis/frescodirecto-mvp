@@ -33,7 +33,7 @@ export function FiltrosCatalogo({ especies, filtros, children }: Props) {
       <div className="-mx-4">
         <BarraFiltros especies={especies} filtros={vista} alCambiar={cambiar} pendiente={pendiente} />
       </div>
-      <div aria-busy={pendiente} className={cn("pt-4 transition-opacity", pendiente && "opacity-60")}>
+      <div aria-busy={pendiente} className={cn("pt-4 transition-opacity duration-150", pendiente && "opacity-60")}>
         {children}
       </div>
     </div>

@@ -180,7 +180,9 @@
     *,
     *::before,
     *::after {
+      /* Un solo ciclo de 1 ms: sin esto, lo infinito (spinner, esqueletos) parpadea. */
       animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 1ms !important;
     }
   }
