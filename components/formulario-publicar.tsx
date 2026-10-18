@@ -23,7 +23,7 @@ import { leerErrorRpc, type FilaEspecie } from "@/lib/tipos";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   especies: Pick<FilaEspecie, "id" | "nombre">[];
@@ -52,6 +52,8 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
   // Sube con cada envío fallido: el efecto lleva el foco al primer campo con error.
   const [intento, setIntento] = useState(0);
   const [enviando, setEnviando] = useState(false);
+  // `disabled` llega hasta que React repinta; el ref frena un segundo clic inmediato.
+  const enviandoRef = useRef(false);
   const [preparandoFoto, setPreparandoFoto] = useState(false);
   const [foto, setFoto] = useState<Foto | null>(null);
   // Ruta ya subida de esta foto: si la base rechaza un dato, el reintento no la sube otra vez.
@@ -93,7 +95,7 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
 
   const publicar = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (enviando) return;
+    if (enviandoRef.current) return;
 
     const vacios = camposVacios({ especie, kg, precio, capturada_en: capturadaEn, foto: foto != null });
     if (vacios.length > 0 || !foto) {
@@ -106,6 +108,7 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
     }
 
     setErrores({});
+    enviandoRef.current = true;
     setEnviando(true);
     const supabase = createClient();
 
@@ -117,6 +120,7 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
         .upload(nueva, foto.blob, { contentType: "image/jpeg" });
       if (error) {
         fallar({ foto: ERROR_SUBIDA });
+        enviandoRef.current = false;
         setEnviando(false);
         return;
       }
@@ -138,6 +142,7 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
     if (error) {
       const { destino, mensaje } = ubicarError(leerErrorRpc(error), precioKg);
       fallar({ [destino]: mensaje });
+      enviandoRef.current = false;
       setEnviando(false);
       return;
     }

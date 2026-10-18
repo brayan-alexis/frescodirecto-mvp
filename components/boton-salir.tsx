@@ -1,13 +1,18 @@
 "use client";
 
+import { Boton } from "@/components/fd/boton";
 import { createClient } from "@/lib/supabase/client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 /** Acción de la barra superior (sobre color marea). */
 export function BotonSalir() {
   const [saliendo, setSaliendo] = useState(false);
+  // `disabled` llega hasta que React repinta; el ref frena un segundo clic inmediato.
+  const saliendoRef = useRef(false);
 
   const salir = async () => {
+    if (saliendoRef.current) return;
+    saliendoRef.current = true;
     setSaliendo(true);
     // Solo esta sesión: las cuentas demo se usan en varios dispositivos a la vez.
     await createClient().auth.signOut({ scope: "local" });
@@ -16,14 +21,8 @@ export function BotonSalir() {
   };
 
   return (
-    <button
-      type="button"
-      onClick={salir}
-      disabled={saliendo}
-      aria-busy={saliendo || undefined}
-      className="inline-flex min-h-11 items-center rounded-md px-3 font-bold disabled:opacity-60"
-    >
-      {saliendo ? "Saliendo…" : "Salir"}
-    </button>
+    <Boton variante="fantasma" ocupado={saliendo} textoOcupado="Saliendo…" onClick={salir}>
+      Salir
+    </Boton>
   );
 }

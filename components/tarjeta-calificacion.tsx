@@ -1,6 +1,7 @@
 "use client";
 
 import { useAvisoAccion } from "@/components/aviso-accion";
+import { BotonActualizar } from "@/components/boton-actualizar";
 import { Aviso } from "@/components/fd/aviso";
 import { Boton } from "@/components/fd/boton";
 import { MensajeCampo, idError } from "@/components/fd/campo";
@@ -93,11 +94,7 @@ export function TarjetaCalificacion({ pedidoId, contraparte, titulo }: Props) {
 
       {errores.general && (
         <Aviso tono="error" titulo={errores.general}>
-          {errores.recargar && (
-            <Boton variante="secundario" className="mt-3" onClick={() => router.refresh()}>
-              Recargar
-            </Boton>
-          )}
+          {errores.recargar && <BotonActualizar etiqueta="Recargar" className="mt-3" />}
         </Aviso>
       )}
 

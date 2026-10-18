@@ -1,6 +1,7 @@
 "use client";
 
 import { useAvisoAccion } from "@/components/aviso-accion";
+import { BotonActualizar } from "@/components/boton-actualizar";
 import { Aviso } from "@/components/fd/aviso";
 import { Boton } from "@/components/fd/boton";
 import { MensajeCampo, idError } from "@/components/fd/campo";
@@ -285,16 +286,7 @@ export function AccionesPedido({ pedidoId, accion, contraparte, montoPescado, mo
       {errores.general && (
         <Aviso tono="error" titulo={errores.general}>
           {errores.recargar && (
-            <Boton
-              variante="secundario"
-              className="mt-3"
-              onClick={() => {
-                abrir("inicio");
-                router.refresh();
-              }}
-            >
-              Recargar
-            </Boton>
+            <BotonActualizar etiqueta="Recargar" className="mt-3" alActualizar={() => abrir("inicio")} />
           )}
         </Aviso>
       )}
