@@ -130,7 +130,7 @@ function Reputacion({
               Lo que dicen los restaurantes (
               {calificaciones.length === MAX_HISTORIAL ? `últimas ${MAX_HISTORIAL}` : calificaciones.length})
             </span>
-            <ChevronDown aria-hidden className="size-5 shrink-0 transition-transform group-open:rotate-180" />
+            <ChevronDown aria-hidden className="size-5 shrink-0 group-open:rotate-180" />
           </summary>
           <ul aria-label="Calificaciones recibidas" className="flex flex-col divide-y divide-line px-3 pb-1">
             {calificaciones.map((c) => (
@@ -228,7 +228,7 @@ function ListaCapturas({
             <span>
               Historial ({historial.length === MAX_HISTORIAL ? `últimas ${MAX_HISTORIAL}` : historial.length})
             </span>
-            <ChevronDown aria-hidden className="size-5 shrink-0 transition-transform group-open:rotate-180" />
+            <ChevronDown aria-hidden className="size-5 shrink-0 group-open:rotate-180" />
           </summary>
           <ul aria-label="Historial de capturas" className="mt-1 flex flex-col gap-3">
             {historial.map((c) => (

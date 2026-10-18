@@ -7,15 +7,19 @@ import { inicioDeRol, rutaInterna } from "@/lib/rutas";
 import { createClient } from "@/lib/supabase/client";
 import type { FilaPerfil } from "@/lib/tipos";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export function FormularioLogin({ siguiente }: { siguiente: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  // `disabled` llega hasta que React repinta; el ref frena un segundo clic inmediato.
+  const enviandoRef = useRef(false);
 
   const entrar = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (enviandoRef.current) return;
     const datos = new FormData(e.currentTarget);
+    enviandoRef.current = true;
     setEnviando(true);
     setError(null);
 
@@ -30,6 +34,7 @@ export function FormularioLogin({ siguiente }: { siguiente: string | null }) {
           ? "Correo o contraseña incorrectos."
           : "No se pudo iniciar sesión. Intenta de nuevo.",
       );
+      enviandoRef.current = false;
       setEnviando(false);
       return;
     }

@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Check, Fish, Store, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type RolRegistro = "restaurante" | "pescador";
 type CampoRegistro = "correo" | "contrasena" | "repetir";
@@ -32,9 +32,12 @@ export function FormularioRegistro() {
   const [rol, setRol] = useState<RolRegistro | null>(null);
   const [error, setError] = useState<ErrorFormulario | null>(null);
   const [enviando, setEnviando] = useState(false);
+  // `disabled` llega hasta que React repinta; el ref frena un segundo clic inmediato.
+  const enviandoRef = useRef(false);
 
   const registrar = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (enviandoRef.current) return;
     const datos = new FormData(e.currentTarget);
     const texto = (campo: string) => String(datos.get(campo) ?? "").trim();
     const contrasena = String(datos.get("contrasena") ?? "");
@@ -46,6 +49,7 @@ export function FormularioRegistro() {
     }
 
     const rolElegido: RolRegistro = datos.get("rol") === "pescador" ? "pescador" : "restaurante";
+    enviandoRef.current = true;
     setEnviando(true);
     // El trigger al_crear_usuario crea el perfil: restaurante aprobado, pescador pendiente.
     const { data, error: errorAuth } = await createClient().auth.signUp({
@@ -65,12 +69,14 @@ export function FormularioRegistro() {
       setError(
         ERRORES[errorAuth.code ?? ""] ?? { mensaje: "No se pudo crear la cuenta. Intenta de nuevo." },
       );
+      enviandoRef.current = false;
       setEnviando(false);
       return;
     }
     if (!data.session) {
       // Solo pasaría con "Confirm email" activado en Supabase.
       setError({ mensaje: "Tu cuenta se creó. Entra con tu correo y contraseña.", tono: "exito" });
+      enviandoRef.current = false;
       setEnviando(false);
       return;
     }

@@ -65,7 +65,7 @@ export function Boton({
       {ocupado ? (
         <span
           aria-hidden
-          className="size-5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+          className="size-5 shrink-0 motion-safe:animate-spin rounded-full border-2 border-current border-t-transparent"
         />
       ) : (
         Icono && <Icono aria-hidden className="size-5 shrink-0" />
