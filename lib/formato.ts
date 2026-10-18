@@ -67,6 +67,11 @@ export function fechaLarga(fecha: Date): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
+/** Si la fecha cae en el mismo día de calendario que `ahora`, en hora de Sonora. */
+export function esHoySonora(fechaIso: string, ahora: Date = new Date()): boolean {
+  return claveDia.format(new Date(fechaIso)) === claveDia.format(ahora);
+}
+
 /** "hoy 5:40 a.m.", "ayer 10:20 p.m." o "14 oct 6:00 a.m.", en hora de Sonora. */
 export function horaSonora(fechaIso: string, ahora: Date = new Date()): string {
   const fecha = new Date(fechaIso);

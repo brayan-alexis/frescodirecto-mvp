@@ -1,28 +1,22 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Aviso } from "@/components/fd/aviso";
+import { Boton } from "@/components/fd/boton";
+import { Campo } from "@/components/fd/campo";
 import { inicioDeRol } from "@/lib/rutas";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { Check, Fish, Store, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 type RolRegistro = "restaurante" | "pescador";
-type Campo = "correo" | "contrasena" | "repetir";
-type ErrorFormulario = { campo?: Campo; mensaje: string };
+type CampoRegistro = "correo" | "contrasena" | "repetir";
+type ErrorFormulario = { campo?: CampoRegistro; mensaje: string; tono?: "error" | "exito" };
 
-const TIPOS: { valor: RolRegistro; titulo: string; detalle: string }[] = [
-  { valor: "restaurante", titulo: "Restaurante", detalle: "Compro pescado para mi marisquería" },
-  { valor: "pescador", titulo: "Pescador", detalle: "Vendo mi captura del día" },
+const TIPOS: { valor: RolRegistro; titulo: string; icono: LucideIcon }[] = [
+  { valor: "restaurante", titulo: "Tengo una marisquería", icono: Store },
+  { valor: "pescador", titulo: "Soy pescador", icono: Fish },
 ];
 
 // Errores de Supabase Auth por código, en español y junto al campo que toca.
@@ -76,7 +70,7 @@ export function FormularioRegistro() {
     }
     if (!data.session) {
       // Solo pasaría con "Confirm email" activado en Supabase.
-      setError({ mensaje: "Tu cuenta se creó. Entra con tu correo y contraseña." });
+      setError({ mensaje: "Tu cuenta se creó. Entra con tu correo y contraseña.", tono: "exito" });
       setEnviando(false);
       return;
     }
@@ -84,12 +78,7 @@ export function FormularioRegistro() {
     window.location.assign(inicioDeRol(rolElegido));
   };
 
-  const errorDe = (campo: Campo) =>
-    error?.campo === campo && (
-      <p role="alert" className="text-sm font-medium text-destructive">
-        {error.mensaje}
-      </p>
-    );
+  const errorDe = (campo: CampoRegistro) => (error?.campo === campo ? error.mensaje : null);
 
   const etiquetaNegocio =
     rol === "restaurante"
@@ -99,133 +88,104 @@ export function FormularioRegistro() {
         : "Marisquería o cooperativa";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl">
-          <h1>Crear cuenta</h1>
-        </CardTitle>
-        <CardDescription>Elige si compras o vendes pescado.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={registrar} className="flex flex-col gap-6">
-          <fieldset className="grid gap-3">
-            <legend className="mb-3 text-sm font-medium">Tipo de cuenta</legend>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {TIPOS.map((tipo) => (
-                <label
-                  key={tipo.valor}
-                  className={cn(
-                    "flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-4",
-                    rol === tipo.valor && "border-primary bg-accent",
-                  )}
-                >
-                  <input
-                    type="radio"
-                    name="rol"
-                    value={tipo.valor}
-                    required
-                    checked={rol === tipo.valor}
-                    onChange={() => setRol(tipo.valor)}
-                    className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
-                  />
-                  <span className="grid gap-1">
-                    <span className="font-semibold">{tipo.titulo}</span>
-                    <span className="text-sm text-muted-foreground">{tipo.detalle}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-            {rol === "pescador" && (
-              <p
-                role="status"
-                className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900"
+    <form onSubmit={registrar} className="flex flex-col gap-5">
+      <fieldset className="flex flex-col gap-1.5">
+        <legend className="mb-1.5 text-sm font-bold text-ink">Tipo de cuenta</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {TIPOS.map(({ valor, titulo, icono: Icono }) => {
+            const elegido = rol === valor;
+            return (
+              <label
+                key={valor}
+                className={cn(
+                  "flex min-h-[72px] cursor-pointer flex-col items-start justify-center gap-1 rounded-lg px-3 py-3 text-sm font-bold leading-tight text-ink",
+                  "has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus",
+                  elegido ? "border-2 border-ink bg-marea-soft" : "border border-line-strong bg-surface",
+                )}
               >
-                Tu cuenta de pescador debe aprobarse antes de publicar.
-              </p>
-            )}
-          </fieldset>
-
-          <div className="grid gap-2">
-            <Label htmlFor="nombre">Tu nombre</Label>
-            <Input id="nombre" name="nombre" autoComplete="name" required className="h-11" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="negocio">{etiquetaNegocio}</Label>
-            <Input
-              id="negocio"
-              name="negocio"
-              autoComplete="organization"
-              required={rol === "restaurante"}
-              className="h-11"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="telefono">Teléfono</Label>
-            <Input
-              id="telefono"
-              name="telefono"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              required
-              className="h-11"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="correo">Correo</Label>
-            <Input
-              id="correo"
-              name="correo"
-              type="email"
-              autoComplete="email"
-              required
-              className="h-11"
-            />
-            {errorDe("correo")}
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="contrasena">Contraseña</Label>
-            <Input
-              id="contrasena"
-              name="contrasena"
-              type="password"
-              autoComplete="new-password"
-              minLength={6}
-              required
-              className="h-11"
-            />
-            {errorDe("contrasena")}
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="repetir">Repetir contraseña</Label>
-            <Input
-              id="repetir"
-              name="repetir"
-              type="password"
-              autoComplete="new-password"
-              minLength={6}
-              required
-              className="h-11"
-            />
-            {errorDe("repetir")}
-          </div>
-
-          {error && !error.campo && (
-            <p role="alert" className="text-sm font-medium text-destructive">
-              {error.mensaje}
-            </p>
-          )}
-          <Button type="submit" className="h-11 w-full" disabled={enviando}>
-            {enviando ? "Creando cuenta…" : "Crear cuenta"}
-          </Button>
-          <p className="text-center text-sm">
-            ¿Ya tienes cuenta?{" "}
-            <Link href="/login" className="underline underline-offset-4">
-              Entrar
-            </Link>
+                <input
+                  type="radio"
+                  name="rol"
+                  value={valor}
+                  required
+                  checked={elegido}
+                  onChange={() => setRol(valor)}
+                  className="sr-only"
+                />
+                <span className="flex w-full items-center justify-between gap-2">
+                  <Icono aria-hidden className="size-5 shrink-0" />
+                  {elegido && <Check aria-hidden className="size-4 shrink-0" strokeWidth={3} />}
+                </span>
+                <span>{titulo}</span>
+              </label>
+            );
+          })}
+        </div>
+        {rol === "pescador" && (
+          <p role="status" className="text-sm text-ink-muted">
+            Tu cuenta queda en revisión hasta que el administrador la apruebe.
           </p>
-        </form>
-      </CardContent>
-    </Card>
+        )}
+      </fieldset>
+
+      <Campo id="nombre" etiqueta="Tu nombre" name="nombre" autoComplete="name" required />
+      <Campo
+        id="negocio"
+        etiqueta={etiquetaNegocio}
+        name="negocio"
+        autoComplete="organization"
+        required={rol === "restaurante"}
+      />
+      <Campo id="telefono" etiqueta="Teléfono" name="telefono" type="tel" inputMode="tel" autoComplete="tel" required />
+      <Campo
+        id="correo"
+        etiqueta="Correo"
+        error={errorDe("correo")}
+        name="correo"
+        type="email"
+        autoComplete="email"
+        required
+      />
+      <Campo
+        id="contrasena"
+        etiqueta="Contraseña"
+        ayuda="Al menos 6 caracteres."
+        error={errorDe("contrasena")}
+        name="contrasena"
+        type="password"
+        autoComplete="new-password"
+        minLength={6}
+        required
+      />
+      <Campo
+        id="repetir"
+        etiqueta="Repetir contraseña"
+        error={errorDe("repetir")}
+        name="repetir"
+        type="password"
+        autoComplete="new-password"
+        minLength={6}
+        required
+      />
+
+      {error && !error.campo && (
+        <Aviso tono={error.tono ?? "error"} titulo={error.mensaje}>
+          {error.tono === "exito" && (
+            <Link href="/login" className="mt-1 inline-flex min-h-11 items-center font-bold underline underline-offset-4">
+              Ir a Entrar
+            </Link>
+          )}
+        </Aviso>
+      )}
+      <Boton type="submit" bloque ocupado={enviando} textoOcupado="Creando cuenta…">
+        Crear cuenta
+      </Boton>
+      <p className="text-center text-sm text-ink">
+        ¿Ya tienes cuenta?{" "}
+        <Link href="/login" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4">
+          Entrar
+        </Link>
+      </p>
+    </form>
   );
 }

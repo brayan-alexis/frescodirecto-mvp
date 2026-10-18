@@ -1,9 +1,11 @@
 "use client";
 
 import { useAvisoAccion } from "@/components/aviso-accion";
-import { Button } from "@/components/ui/button";
+import { Aviso } from "@/components/fd/aviso";
+import { Boton } from "@/components/fd/boton";
 import { createClient } from "@/lib/supabase/client";
 import { leerErrorRpc } from "@/lib/tipos";
+import { Check, ChevronLeft, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -15,14 +17,15 @@ export function AccionesPendiente({ perfilId, nombre }: { perfilId: string; nomb
   const avisar = useAvisoAccion();
   const [confirmarRechazo, setConfirmarRechazo] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [enviando, setEnviando] = useState(false);
+  // Qué respuesta está en curso: solo ese botón muestra el spinner.
+  const [enviando, setEnviando] = useState<"aprobar" | "rechazar" | null>(null);
   // `disabled` llega hasta que React repinta; el ref frena un segundo clic inmediato.
   const enviandoRef = useRef(false);
 
   const responder = async (aprobar: boolean) => {
     if (enviandoRef.current) return;
     enviandoRef.current = true;
-    setEnviando(true);
+    setEnviando(aprobar ? "aprobar" : "rechazar");
     setError(null);
 
     const { error } = await createClient().rpc("aprobar_pescador", {
@@ -31,7 +34,7 @@ export function AccionesPendiente({ perfilId, nombre }: { perfilId: string; nomb
     });
 
     enviandoRef.current = false;
-    setEnviando(false);
+    setEnviando(null);
     if (error) {
       const e = leerErrorRpc(error);
       setError(e.codigo == null ? ERROR_CONEXION : e.mensaje);
@@ -43,52 +46,51 @@ export function AccionesPendiente({ perfilId, nombre }: { perfilId: string; nomb
 
   return (
     <div className="flex flex-col gap-2">
-      {error && (
-        <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900">
-          {error}
-        </p>
-      )}
+      {error && <Aviso tono="error" titulo={error} />}
       {confirmarRechazo ? (
         <>
-          <p className="text-sm">¿Rechazar a {nombre}? No podrá publicar capturas.</p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="destructive"
-              className="h-11"
-              disabled={enviando}
-              onClick={() => responder(false)}
-            >
-              {enviando ? "Rechazando…" : "Sí, rechazar"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11"
-              disabled={enviando}
+          <p className="text-sm text-ink">¿Rechazar a {nombre}? No podrá publicar capturas.</p>
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+            <Boton
+              variante="secundario"
+              icono={ChevronLeft}
+              disabled={enviando != null}
               onClick={() => setConfirmarRechazo(false)}
             >
               Volver
-            </Button>
+            </Boton>
+            <Boton
+              variante="peligro"
+              bloque
+              ocupado={enviando === "rechazar"}
+              textoOcupado="Rechazando…"
+              onClick={() => responder(false)}
+            >
+              Sí, rechazar
+            </Boton>
           </div>
         </>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" className="h-11" disabled={enviando} onClick={() => responder(true)}>
-            {enviando ? "Aprobando…" : "Aprobar"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11"
-            disabled={enviando}
+        <div className="grid grid-cols-2 gap-2">
+          <Boton
+            variante="secundario"
+            icono={X}
+            disabled={enviando != null}
             onClick={() => {
               setError(null);
               setConfirmarRechazo(true);
             }}
           >
             Rechazar
-          </Button>
+          </Boton>
+          <Boton
+            icono={Check}
+            ocupado={enviando === "aprobar"}
+            textoOcupado="Aprobando…"
+            onClick={() => responder(true)}
+          >
+            Aprobar
+          </Boton>
         </div>
       )}
     </div>

@@ -5,10 +5,10 @@ import { BotonSalir } from "@/components/boton-salir";
 import type { Rol } from "@/lib/tipos";
 import { usePathname } from "next/navigation";
 
-// En los detalles, el botón Volver reemplaza a la marca. /pescador/publicar
-// todavía tiene su propio enlace de regreso: se agrega aquí al rediseñarla.
+// En los detalles y en Publicar, el botón Volver reemplaza a la marca.
 function volverDe(pathname: string, rol: Rol | null) {
   if (/^\/captura\/[^/]+$/.test(pathname)) return { href: "/", texto: "Catálogo" };
+  if (pathname === "/pescador/publicar") return { href: "/pescador", texto: "Mis capturas" };
   if (/^\/pedidos\/[^/]+$/.test(pathname)) {
     return rol === "pescador"
       ? { href: "/pescador/ventas", texto: "Ventas" }

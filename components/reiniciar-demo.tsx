@@ -1,9 +1,11 @@
 "use client";
 
 import { useAvisoAccion } from "@/components/aviso-accion";
-import { Button } from "@/components/ui/button";
+import { Aviso } from "@/components/fd/aviso";
+import { Boton } from "@/components/fd/boton";
 import { createClient } from "@/lib/supabase/client";
 import { leerErrorRpc } from "@/lib/tipos";
+import { RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -44,41 +46,33 @@ export function ReiniciarDemo() {
 
   return (
     <div className="flex flex-col gap-3">
-      {error && (
-        <p role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900">
-          {error}
-        </p>
-      )}
+      {error && <Aviso tono="error" titulo={error} />}
       {confirmando ? (
-        <div className="flex flex-col gap-3 rounded-md border p-3">
-          <p className="text-sm font-medium">¿Seguro? Se borran los pedidos de prueba y se recarga el escenario.</p>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="destructive" className="h-11" disabled={enviando} onClick={reiniciar}>
-              {enviando ? "Reiniciando…" : "Sí, reiniciar"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11"
-              disabled={enviando}
-              onClick={() => setConfirmando(false)}
-            >
+        <div className="flex flex-col gap-3 rounded-md bg-surface-sunken p-3">
+          <p className="text-sm font-bold text-ink">
+            ¿Seguro? Se borran los pedidos de prueba y se recarga el escenario.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <Boton variante="secundario" disabled={enviando} onClick={() => setConfirmando(false)}>
               Cancelar
-            </Button>
+            </Boton>
+            <Boton variante="peligro" ocupado={enviando} textoOcupado="Reiniciando…" onClick={reiniciar}>
+              Sí, reiniciar
+            </Boton>
           </div>
         </div>
       ) : (
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 self-start"
+        <Boton
+          variante="secundario"
+          icono={RotateCcw}
+          className="self-start"
           onClick={() => {
             setError(null);
             setConfirmando(true);
           }}
         >
           Reiniciar demo
-        </Button>
+        </Boton>
       )}
     </div>
   );

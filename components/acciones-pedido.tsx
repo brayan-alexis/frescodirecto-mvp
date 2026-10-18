@@ -19,6 +19,8 @@ type Props = {
   // Montos de mis_pedidos ya formateados en el servidor: la pantalla no calcula dinero.
   montoPescado: string;
   montoPagado: string;
+  /** En la lista de Ventas, "Marcar entregado" va como secundario: hay varias tarjetas y un solo primario. */
+  enLista?: boolean;
 };
 
 type Panel = "inicio" | "cancelar" | "confirmar" | "conforme" | "incidencia" | "rechazar";
@@ -27,7 +29,7 @@ type Errores = { general?: string; nota?: string; recargar?: boolean };
 const ERROR_CONEXION = "No se pudo completar la acción. Revisa tu conexión e intenta de nuevo.";
 
 /** Botones del pedido según el papel y el estado. Cada transición la valida y la hace la base. */
-export function AccionesPedido({ pedidoId, accion, contraparte, montoPescado, montoPagado }: Props) {
+export function AccionesPedido({ pedidoId, accion, contraparte, montoPescado, montoPagado, enLista }: Props) {
   const router = useRouter();
   const avisar = useAvisoAccion();
   const id = useId();
@@ -258,6 +260,7 @@ export function AccionesPedido({ pedidoId, accion, contraparte, montoPescado, mo
           )}
           {accion === "entregar" && (
             <Boton
+              variante={enLista ? "secundario" : "primario"}
               bloque
               icono={Truck}
               ocupado={enviando}

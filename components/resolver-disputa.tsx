@@ -1,14 +1,15 @@
 "use client";
 
 import { useAvisoAccion } from "@/components/aviso-accion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Aviso } from "@/components/fd/aviso";
+import { Boton } from "@/components/fd/boton";
+import { Campo, atributosControl, claseControl } from "@/components/fd/campo";
 import { montoReembolso, OPCIONES_RESOLUCION, repartoDisputa, type OpcionResolucion } from "@/lib/disputas";
 import { formatoDinero } from "@/lib/formato";
 import { createClient } from "@/lib/supabase/client";
 import { leerErrorRpc, type FilaPago } from "@/lib/tipos";
 import { cn } from "@/lib/utils";
+import { Check, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
 
@@ -23,9 +24,6 @@ type Props = {
 
 type Errores = { general?: string; reembolso?: string; nota?: string; recargar?: boolean };
 
-const ALERTA = "rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900";
-const TEXTAREA =
-  "w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 const ERROR_CONEXION = "No se pudo resolver la disputa. Revisa tu conexión e intenta de nuevo.";
 
 /**
@@ -89,122 +87,119 @@ export function ResolverDisputa({ pedidoId, folio, subtotal, comision, pescador 
   };
 
   const idParcial = `${id}-parcial`;
-  const idErrorParcial = `${id}-error-parcial`;
   const idNota = `${id}-nota`;
-  const idErrorNota = `${id}-error-nota`;
   const reparto = porConfirmar != null ? repartoDisputa(subtotal, comision, porConfirmar) : null;
+  const bloqueado = enviando || reparto != null;
 
   return (
     <div className="flex flex-col gap-3">
       {errores.general && (
-        <div role="alert" className={cn(ALERTA, "flex flex-col items-start gap-3")}>
-          <p>{errores.general}</p>
+        <Aviso tono="error" titulo={errores.general}>
           {errores.recargar && (
-            <Button type="button" variant="outline" className="h-11" onClick={() => router.refresh()}>
+            <Boton variante="secundario" className="mt-3" onClick={() => router.refresh()}>
               Recargar
-            </Button>
+            </Boton>
           )}
-        </div>
+        </Aviso>
       )}
 
-      <form onSubmit={revisar} noValidate className="flex flex-col gap-3">
-        <fieldset className="grid gap-2" disabled={enviando || reparto != null}>
-          <legend className="mb-2 text-sm font-medium leading-none">Resolución</legend>
-          {OPCIONES_RESOLUCION.map((o) => (
-            <label
-              key={o.valor}
-              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md border px-3 text-base has-[:checked]:border-primary has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
-            >
-              <input
-                type="radio"
-                name={`${id}-opcion`}
-                value={o.valor}
-                checked={opcion === o.valor}
-                onChange={() => {
-                  setOpcion(o.valor);
-                  setErrores((previos) => ({ ...previos, reembolso: undefined }));
-                }}
-                className="size-4 accent-primary"
-              />
-              {o.texto}
-            </label>
-          ))}
+      <form onSubmit={revisar} noValidate className="flex flex-col gap-4">
+        <fieldset className="flex flex-col gap-1.5" disabled={bloqueado}>
+          <legend className="mb-1.5 text-sm font-bold text-ink">Resolución</legend>
+          <div className="flex flex-col gap-2">
+            {OPCIONES_RESOLUCION.map((o) => {
+              const elegida = opcion === o.valor;
+              return (
+                <label
+                  key={o.valor}
+                  className={cn(
+                    "flex min-h-12 cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-ink",
+                    "has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus",
+                    "has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60",
+                    elegida ? "border-2 border-ink bg-marea-soft" : "border border-line-strong bg-surface",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name={`${id}-opcion`}
+                    value={o.valor}
+                    checked={elegida}
+                    onChange={() => {
+                      setOpcion(o.valor);
+                      setErrores((previos) => ({ ...previos, reembolso: undefined }));
+                    }}
+                    className="sr-only"
+                  />
+                  <span className="min-w-0 flex-1">{o.texto}</span>
+                  {elegida && <Check aria-hidden className="size-4 shrink-0" strokeWidth={3} />}
+                </label>
+              );
+            })}
+          </div>
         </fieldset>
 
-        {opcion === "parcial" && (
-          <div className="grid gap-2">
-            <Label htmlFor={idParcial}>Monto del pescado a reembolsar (de $0 a {formatoDinero(subtotal)})</Label>
-            <Input
-              id={idParcial}
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="85"
-              value={parcial}
-              onChange={(e) => setParcial(e.target.value)}
-              disabled={enviando || reparto != null}
-              aria-invalid={errores.reembolso ? true : undefined}
-              aria-describedby={errores.reembolso ? idErrorParcial : undefined}
-              className="h-11"
-            />
-          </div>
-        )}
-        {errores.reembolso && (
-          <p id={idErrorParcial} role="alert" className="text-sm font-medium text-destructive">
-            {errores.reembolso}
-          </p>
+        {opcion === "parcial" ? (
+          <Campo
+            id={idParcial}
+            etiqueta="Monto del pescado a reembolsar"
+            ayuda={`De $0 a ${formatoDinero(subtotal)}.`}
+            prefijo="$"
+            error={errores.reembolso}
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="85"
+            value={parcial}
+            onChange={(e) => setParcial(e.target.value)}
+            disabled={bloqueado}
+          />
+        ) : (
+          // Un error de la base sobre el monto con otra opción elegida va aquí, sin campo.
+          errores.reembolso && <Aviso tono="error" titulo={errores.reembolso} />
         )}
 
-        <div className="grid gap-2">
-          <Label htmlFor={idNota}>Nota de resolución</Label>
+        <Campo id={idNota} etiqueta="Nota de resolución" error={errores.nota}>
           <textarea
-            id={idNota}
+            {...atributosControl(idNota, errores.nota)}
             rows={3}
             maxLength={500}
             value={nota}
             onChange={(e) => setNota(e.target.value)}
-            disabled={enviando || reparto != null}
+            disabled={bloqueado}
             placeholder="Ej.: se comprobó con fotos que llegó sin hielo"
-            aria-invalid={errores.nota ? true : undefined}
-            aria-describedby={errores.nota ? idErrorNota : undefined}
-            className={TEXTAREA}
+            className={cn(claseControl, "self-stretch py-2")}
           />
-          {errores.nota && (
-            <p id={idErrorNota} role="alert" className="text-sm font-medium text-destructive">
-              {errores.nota}
-            </p>
-          )}
-        </div>
+        </Campo>
 
         {reparto == null && (
-          <Button type="submit" className="h-11 self-start">
+          <Boton type="submit" variante="secundario" className="self-start">
             Revisar resolución
-          </Button>
+          </Boton>
         )}
       </form>
 
       {reparto != null && porConfirmar != null && (
-        <div className="flex flex-col gap-3 rounded-md border p-3">
-          <p className="text-sm font-medium">
-            Se devolverán {formatoDinero(reparto.alRestaurante)} al restaurante y se pagarán{" "}
-            {formatoDinero(reparto.alPescador)} al pescador.
+        <div className="flex flex-col gap-3 rounded-md bg-surface-sunken p-3 text-sm text-ink">
+          <p className="font-bold">
+            Se devolverán <span className="tabular-nums">{formatoDinero(reparto.alRestaurante)}</span> al
+            restaurante y se pagarán <span className="tabular-nums">{formatoDinero(reparto.alPescador)}</span> al
+            pescador.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-ink-muted">
             Incluye la comisión de {formatoDinero(comision)}: los pedidos con incidencia no la cobran.
           </p>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" className="h-11" disabled={enviando} onClick={() => resolver(porConfirmar)}>
-              {enviando ? "Resolviendo…" : "Sí, resolver"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11"
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+            <Boton
+              variante="secundario"
+              icono={ChevronLeft}
               disabled={enviando}
               onClick={() => setPorConfirmar(null)}
             >
               Volver
-            </Button>
+            </Boton>
+            <Boton bloque ocupado={enviando} textoOcupado="Resolviendo…" onClick={() => resolver(porConfirmar)}>
+              Sí, resolver
+            </Boton>
           </div>
         </div>
       )}

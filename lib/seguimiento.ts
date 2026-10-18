@@ -1,6 +1,7 @@
 // Ayudas de F4 (seguimiento). La base valida cada transición y mueve el dinero;
 // aquí solo se decide qué botones mostrar, cómo ordenar las listas y qué sumar
 // para el resumen del pescador con los montos que ya trae mis_pedidos.
+import { esHoySonora } from "@/lib/formato";
 import type { EstadoPedido, MiPedido } from "@/lib/tipos";
 
 export const MAX_HISTORIAL = 20;
@@ -62,4 +63,19 @@ export function resumenVentas(filas: MiPedido[]): { porCobrar: number; cobrado: 
     }
   }
   return { porCobrar: porCobrar / 100, cobrado: cobrado / 100 };
+}
+
+/**
+ * Resumen del día en Mis ventas: pedidos recibidos hoy (hora de Sonora) que siguen en pie,
+ * sin rechazados ni cancelados, y la suma de su valor del pescado. Solo para mostrar.
+ */
+export function resumenHoy(filas: MiPedido[], ahora: Date): { pedidos: number; total: number } {
+  let pedidos = 0;
+  let centavos = 0;
+  for (const p of filas) {
+    if (p.estado === "rechazado" || p.estado === "cancelado" || !esHoySonora(p.creado_en, ahora)) continue;
+    pedidos += 1;
+    centavos += Math.round(p.total * 100);
+  }
+  return { pedidos, total: centavos / 100 };
 }
