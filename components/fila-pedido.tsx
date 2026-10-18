@@ -46,9 +46,9 @@ export function CalificacionDe({ pedido }: { pedido: MiPedido }) {
   }
   if (pedido.mi_papel !== "restaurante" || pedido.calificacion == null) return null;
   return (
-    <p className="font-medium">
+    <p className="font-bold text-ink">
       Calificaste con{" "}
-      <span role="img" aria-label={`${pedido.calificacion} de 5 estrellas`} className="text-amber-600">
+      <span role="img" aria-label={`${pedido.calificacion} de 5 estrellas`} className="text-alerta">
         {formatoEstrellas(pedido.calificacion)}
       </span>
     </p>

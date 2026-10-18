@@ -57,8 +57,9 @@ export function TarjetaCaptura({ captura, foto, ahora, conPublicados, href }: Pr
         </div>
       )}
       <div className="flex min-w-0 flex-col gap-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <h3 className="truncate text-lg font-bold text-ink">{captura.especie}</h3>
+        {/* Si la especie y el precio no caben juntos (Huachinango a 375 px), el precio baja de línea. */}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+          <h3 className="min-w-0 break-words text-lg font-bold text-ink">{captura.especie}</h3>
           <p className="shrink-0 text-lg font-bold tabular-nums text-ink">
             {formatoDinero(captura.precio_kg)}
             <span className="text-[13px] font-normal text-ink-muted">/kg</span>
