@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  fechaLarga,
   formatoDinero,
   formatoEstrellas,
   formatoKg,
@@ -69,4 +70,11 @@ test("formatoEstrellas: llenas y vacías hasta 5", () => {
   assert.equal(formatoEstrellas(5), "★★★★★");
   assert.equal(formatoEstrellas(4), "★★★★☆");
   assert.equal(formatoEstrellas(1), "★☆☆☆☆");
+});
+
+test("fechaLarga: día de la semana con mayúscula, en hora de Sonora", () => {
+  assert.equal(fechaLarga(new Date("2026-10-17T15:00:00Z")), "Sábado 17 de octubre");
+  // 05:20 UTC del 18 todavía es el sábado 17 en Sonora (UTC−7).
+  assert.equal(fechaLarga(new Date("2026-10-18T05:20:00Z")), "Sábado 17 de octubre");
+  assert.equal(fechaLarga(new Date("2026-10-18T07:30:00Z")), "Domingo 18 de octubre");
 });

@@ -19,6 +19,12 @@ const hora24 = new Intl.DateTimeFormat("es-MX", {
   minute: "2-digit",
   hourCycle: "h23",
 });
+const fechaLargaFmt = new Intl.DateTimeFormat("es-MX", {
+  timeZone: TZ,
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+});
 // en-CA da AAAA-MM-DD: sirve para comparar días de calendario en Sonora.
 const claveDia = new Intl.DateTimeFormat("en-CA", { timeZone: TZ });
 
@@ -53,6 +59,12 @@ export function horasRestantes(capturadaEnIso: string, ahora: Date = new Date())
 export function horaExacta(fechaIso: string): string {
   const fecha = new Date(fechaIso);
   return `${hora24.format(fecha)} · ${fechaCorta.format(fecha)}`;
+}
+
+/** "Sábado 17 de octubre" en hora de Sonora: el encabezado del catálogo. */
+export function fechaLarga(fecha: Date): string {
+  const texto = fechaLargaFmt.format(fecha).replace(",", "");
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
 /** "hoy 5:40 a.m.", "ayer 10:20 p.m." o "14 oct 6:00 a.m.", en hora de Sonora. */

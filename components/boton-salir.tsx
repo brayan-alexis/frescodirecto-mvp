@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 
+/** Acción de la barra superior (sobre color marea). */
 export function BotonSalir() {
   const [saliendo, setSaliendo] = useState(false);
 
@@ -16,13 +16,14 @@ export function BotonSalir() {
   };
 
   return (
-    <Button
-      variant="ghost"
-      className="h-11 px-2"
+    <button
+      type="button"
       onClick={salir}
       disabled={saliendo}
+      aria-busy={saliendo || undefined}
+      className="inline-flex min-h-11 items-center rounded-md px-3 font-bold disabled:opacity-60"
     >
-      Salir
-    </Button>
+      {saliendo ? "Saliendo…" : "Salir"}
+    </button>
   );
 }

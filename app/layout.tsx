@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { AvisoAcceso } from "@/components/aviso-acceso";
-import { Encabezado } from "@/components/encabezado";
+import { Encabezado, NavegacionInferior } from "@/components/encabezado";
 import { atkinson, atkinsonMono, playfair } from "./fuentes";
 import "./globals.css";
 
@@ -43,9 +43,11 @@ export default function RootLayout({
           </Suspense>
           {children}
         </main>
-        <footer className="border-t px-4 py-6 text-center text-xs text-muted-foreground">
+        <footer className="border-t border-line px-4 py-6 text-center text-xs text-ink-muted">
           MVP académico · Todos los datos son ficticios
         </footer>
+        {/* Después del pie: es sticky y al final del scroll queda abajo de todo. */}
+        <NavegacionInferior />
       </body>
     </html>
   );

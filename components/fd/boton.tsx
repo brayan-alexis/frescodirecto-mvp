@@ -38,6 +38,9 @@ function clases(variante: VarianteBoton, bloque: boolean | undefined, className?
   );
 }
 
+/** Las clases de Boton, para un <a> que debe recargar la página completa ("Reintentar"). */
+export const claseBoton = clases;
+
 /** Botón del sistema. Etiqueta como verbo + objeto: "Pedir 10 kg · $950.00". */
 export function Boton({
   variante = "primario",

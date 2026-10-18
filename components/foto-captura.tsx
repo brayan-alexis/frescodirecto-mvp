@@ -8,7 +8,8 @@ import { useState } from "react";
 type Props = {
   src: string | null;
   alt: string;
-  variante: "miniatura" | "grande";
+  /** portada: a ancho completo arriba del detalle de captura. */
+  variante: "miniatura" | "grande" | "portada";
 };
 
 /**
@@ -18,6 +19,7 @@ type Props = {
 export function FotoCaptura({ src, alt, variante }: Props) {
   const [fallo, setFallo] = useState(false);
   const miniatura = variante === "miniatura";
+  const portada = variante === "portada";
 
   if (!src || fallo) {
     return (
@@ -25,11 +27,14 @@ export function FotoCaptura({ src, alt, variante }: Props) {
         role="img"
         aria-label="Sin foto"
         className={cn(
-          "flex items-center justify-center bg-muted text-muted-foreground",
-          miniatura ? "size-20 shrink-0 rounded-md" : "aspect-[4/3] w-full rounded-xl",
+          "flex items-center justify-center",
+          portada ? "h-[200px] w-full flex-col gap-2 bg-marea-soft text-ink" : "bg-muted text-muted-foreground",
+          miniatura && "size-20 shrink-0 rounded-md",
+          variante === "grande" && "aspect-[4/3] w-full rounded-xl",
         )}
       >
-        <Fish aria-hidden className={miniatura ? "size-8" : "size-16"} />
+        <Fish aria-hidden className={miniatura ? "size-8" : portada ? "size-12" : "size-16"} />
+        {portada && <span aria-hidden className="text-sm font-bold">Foto de la captura</span>}
       </div>
     );
   }
@@ -48,12 +53,17 @@ export function FotoCaptura({ src, alt, variante }: Props) {
   }
 
   return (
-    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
+    <div
+      className={cn(
+        "relative w-full overflow-hidden",
+        portada ? "h-[200px] bg-surface-sunken" : "aspect-[4/3] rounded-xl bg-muted",
+      )}
+    >
       <Image
         src={src}
         alt={alt}
         fill
-        sizes="(max-width: 640px) 100vw, 576px"
+        sizes={portada ? "(max-width: 480px) 100vw, 480px" : "(max-width: 640px) 100vw, 576px"}
         loading="eager"
         onError={() => setFallo(true)}
         className="object-cover"

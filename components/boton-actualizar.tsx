@@ -1,6 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Boton } from "@/components/fd/boton";
+import { RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
@@ -10,14 +11,14 @@ export function BotonActualizar() {
   const [actualizando, iniciar] = useTransition();
 
   return (
-    <Button
-      type="button"
-      variant="outline"
-      className="h-11"
-      disabled={actualizando}
+    <Boton
+      variante="secundario"
+      icono={RotateCw}
+      ocupado={actualizando}
+      textoOcupado="Actualizando…"
       onClick={() => iniciar(() => router.refresh())}
     >
-      {actualizando ? "Actualizando…" : "Actualizar"}
-    </Button>
+      Actualizar
+    </Boton>
   );
 }
