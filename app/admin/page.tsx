@@ -2,10 +2,11 @@ import { AccionesPendiente } from "@/components/acciones-pendiente";
 import { AvisoAccionProvider } from "@/components/aviso-accion";
 import { AvisoModoPrueba } from "@/components/aviso-modo-prueba";
 import { BotonActualizar } from "@/components/boton-actualizar";
-import { EsqueletoLista } from "@/components/esqueleto-lista";
 import { ReiniciarDemo } from "@/components/reiniciar-demo";
 import { ResolverDisputa } from "@/components/resolver-disputa";
-import { Button } from "@/components/ui/button";
+import { Aviso } from "@/components/fd/aviso";
+import { ErrorCarga } from "@/components/fd/error-carga";
+import { EsqueletoTarjetas } from "@/components/fd/esqueleto-tarjetas";
 import { formatoDinero, formatoKg, horaSonora } from "@/lib/formato";
 import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
@@ -17,11 +18,22 @@ export const metadata: Metadata = { title: "Administración" };
 
 type PerfilPendiente = Pick<FilaPerfil, "id" | "nombre" | "negocio" | "telefono" | "creado_en">;
 
+const TARJETA = "rounded-lg bg-surface p-4 shadow-card";
+
 export default function PaginaAdmin() {
   return (
-    <Suspense fallback={<EsqueletoLista texto="Cargando la administración…" />}>
+    <Suspense fallback={<Esqueleto />}>
       <Contenido />
     </Suspense>
+  );
+}
+
+function Titulo() {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h1 className="font-display text-[26px] font-bold leading-8 text-ink">Administración</h1>
+      <BotonActualizar />
+    </div>
   );
 }
 
@@ -42,33 +54,32 @@ async function Contenido() {
   ]);
   const listaPendientes: PerfilPendiente[] = pendientes.data ?? [];
   const listaDisputas: DisputaAbierta[] = disputas.data ?? [];
+  // Después de leer la sesión y los datos, así que la hora es de esta petición.
+  const ahora = new Date();
 
   return (
     <AvisoAccionProvider>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold">Administración</h1>
-          <BotonActualizar />
-        </div>
+        <Titulo />
 
         <section aria-labelledby="titulo-pendientes" className="flex flex-col gap-3">
-          <h2 id="titulo-pendientes" className="text-lg font-semibold">
+          <h2 id="titulo-pendientes" className="text-sm font-bold text-ink-muted">
             Pescadores pendientes{!pendientes.error && ` (${listaPendientes.length})`}
           </h2>
           {pendientes.error ? (
-            <ErrorCarga texto="No pudimos cargar los pescadores pendientes." />
+            <ErrorCarga titulo="No pudimos cargar los pescadores pendientes" href="/admin" />
           ) : listaPendientes.length === 0 ? (
             <Vacio texto="No hay pescadores pendientes." />
           ) : (
-            <ul aria-label="Pescadores pendientes" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <ul aria-label="Pescadores pendientes" className="flex flex-col gap-3">
               {listaPendientes.map((p) => (
                 <li key={p.id}>
-                  <article className="flex flex-col gap-2 rounded-xl border bg-card p-3 text-sm">
-                    <div className="flex flex-col gap-0.5">
-                      <h3 className="text-base font-semibold">{p.nombre}</h3>
+                  <article className={`${TARJETA} flex flex-col gap-3`}>
+                    <div className="flex flex-col gap-0.5 text-sm text-ink">
+                      <h3 className="text-base font-bold">{p.nombre}</h3>
                       {p.negocio && <p>{p.negocio}</p>}
-                      {p.telefono && <p>Tel. {p.telefono}</p>}
-                      <p className="text-muted-foreground">Se registró {horaSonora(p.creado_en)}</p>
+                      {p.telefono && <p className="tabular-nums">Tel. {p.telefono}</p>}
+                      <p className="text-[13px] text-ink-muted">Se registró {horaSonora(p.creado_en, ahora)}</p>
                     </div>
                     <AccionesPendiente perfilId={p.id} nombre={p.nombre} />
                   </article>
@@ -79,43 +90,48 @@ async function Contenido() {
         </section>
 
         <section aria-labelledby="titulo-disputas" className="flex flex-col gap-3">
-          <h2 id="titulo-disputas" className="text-lg font-semibold">
+          <h2 id="titulo-disputas" className="text-sm font-bold text-ink-muted">
             Disputas de pago{!disputas.error && ` (${listaDisputas.length})`}
           </h2>
           <AvisoModoPrueba />
           {disputas.error ? (
-            <ErrorCarga texto="No pudimos cargar las disputas." />
+            <ErrorCarga titulo="No pudimos cargar las disputas" href="/admin" />
           ) : listaDisputas.length === 0 ? (
             <Vacio texto="No hay disputas abiertas." />
           ) : (
-            <ul aria-label="Disputas abiertas" className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <ul aria-label="Disputas abiertas" className="flex flex-col gap-3">
               {listaDisputas.map((d) => (
                 <li key={d.pedido_id}>
-                  <article className="flex flex-col gap-3 rounded-xl border bg-card p-3 text-sm">
+                  <article className={`${TARJETA} flex flex-col gap-4 text-sm text-ink`}>
                     <div className="flex flex-col gap-0.5">
-                      <h3 className="text-base font-semibold">
-                        {d.folio} · {d.especie} · {formatoKg(d.kg)}
+                      <p className="font-mono text-sm font-semibold text-ink-muted">{d.folio}</p>
+                      <h3 className="text-base font-bold">
+                        {d.especie} · {formatoKg(d.kg)}
                       </h3>
-                      <p className="text-muted-foreground">Recibo {d.recibo}</p>
+                      <p className="text-[13px] text-ink-muted">
+                        Recibo <span className="font-mono">{d.recibo}</span>
+                      </p>
                       <p>
                         {d.restaurante} → {d.pescador}
                       </p>
                     </div>
                     <dl className="flex flex-col gap-1">
                       <div className="flex justify-between gap-3">
-                        <dt>Valor del pescado</dt>
-                        <dd>{formatoDinero(d.subtotal)}</dd>
+                        <dt className="text-ink-muted">Valor del pescado</dt>
+                        <dd className="font-bold tabular-nums">{formatoDinero(d.subtotal)}</dd>
                       </div>
                       <div className="flex justify-between gap-3">
-                        <dt>Comisión de servicio 5 %</dt>
-                        <dd>{formatoDinero(d.comision)}</dd>
+                        <dt className="text-ink-muted">Comisión de servicio 5 %</dt>
+                        <dd className="font-bold tabular-nums">{formatoDinero(d.comision)}</dd>
                       </div>
                     </dl>
-                    <p className="rounded-md border border-red-300 bg-red-50 p-3 text-red-900">
-                      <strong>Incidencia:</strong> {d.nota_incidencia ?? "Sin descripción"}
-                      <br />
-                      <span className="text-red-800">Reportada {horaSonora(d.reportado_en)} (hora de Sonora)</span>
-                    </p>
+                    <Aviso tono="error" titulo="Incidencia">
+                      <p>{d.nota_incidencia ?? "Sin descripción"}</p>
+                      <p className="mt-1 text-[13px]">
+                        Reportada <span className="font-mono">{horaSonora(d.reportado_en, ahora)}</span> (hora de
+                        Sonora)
+                      </p>
+                    </Aviso>
                     <ResolverDisputa
                       pedidoId={d.pedido_id}
                       folio={d.folio}
@@ -130,11 +146,16 @@ async function Contenido() {
           )}
         </section>
 
-        <section aria-labelledby="titulo-demo" className="flex flex-col gap-3 rounded-xl border p-3">
-          <h2 id="titulo-demo" className="text-lg font-semibold">
+        {/* La nav inferior del admin enlaza aquí: /admin#reiniciar-demo. */}
+        <section
+          id="reiniciar-demo"
+          aria-labelledby="titulo-demo"
+          className={`${TARJETA} flex scroll-mt-4 flex-col gap-3`}
+        >
+          <h2 id="titulo-demo" className="text-lg font-bold text-ink">
             Escenario demo
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-ink-muted">
             Vuelve a cargar las capturas, pedidos y disputas de las cuentas fd.*. Las demás cuentas no se tocan.
           </p>
           <ReiniciarDemo />
@@ -146,23 +167,18 @@ async function Contenido() {
 
 function Vacio({ texto }: { texto: string }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed px-4 py-6">
-      <p className="font-medium">{texto}</p>
+    <div className="flex flex-col items-start gap-3 rounded-lg bg-surface-sunken px-4 py-4 text-sm text-ink">
+      <p className="font-bold">{texto}</p>
       <BotonActualizar />
     </div>
   );
 }
 
-function ErrorCarga({ texto }: { texto: string }) {
+function Esqueleto() {
   return (
-    <div
-      role="alert"
-      className="flex flex-col items-start gap-3 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900"
-    >
-      <p>{texto} Revisa tu conexión e inténtalo de nuevo.</p>
-      <Button asChild variant="outline" className="h-11">
-        <a href="/admin">Reintentar</a>
-      </Button>
+    <div className="flex flex-col gap-4">
+      <Titulo />
+      <EsqueletoTarjetas texto="Cargando la administración…" conFoto={false} />
     </div>
   );
 }
