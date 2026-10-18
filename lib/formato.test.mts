@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  esHoySonora,
   fechaLarga,
   formatoDinero,
   formatoEstrellas,
@@ -40,6 +41,12 @@ test("horaSonora: hoy, ayer y días anteriores en hora de Sonora", () => {
   assert.match(horaSonora("2026-10-17T12:40:00Z", ahora), /^hoy 5:40\sa\.\s?m\.$/);
   assert.match(horaSonora("2026-10-17T05:20:00Z", ahora), /^ayer 10:20\sp\.\s?m\.$/); // 17 en UTC, 16 en Sonora
   assert.match(horaSonora("2026-10-14T13:00:00Z", ahora), /^14 oct\.? 6:00\sa\.\s?m\.$/);
+});
+
+test("esHoySonora: mismo día de calendario en hora de Sonora", () => {
+  assert.equal(esHoySonora("2026-10-17T12:40:00Z", ahora), true);
+  assert.equal(esHoySonora("2026-10-17T05:20:00Z", ahora), false); // 17 en UTC, 16 en Sonora
+  assert.equal(esHoySonora("2026-10-18T05:00:00Z", ahora), true); // 18 en UTC, 17 a las 22:00 en Sonora
 });
 
 test("horasDesde: minutos u horas desde la fecha", () => {
