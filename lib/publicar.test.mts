@@ -6,6 +6,7 @@ import {
   horaLocalSonora,
   horaSonoraAIso,
   leerDecimal,
+  MENSAJES_INCOMPLETO,
   ubicarError,
 } from "./publicar.ts";
 
@@ -43,11 +44,33 @@ test("camposVacios: en el orden del formulario", () => {
   );
 });
 
-test("ubicarError: campo del formulario, general o conexión", () => {
+test("ubicarError: DATO_INCOMPLETO usa el texto del sistema de diseño junto a su campo", () => {
   const kg = "Dato incompleto: los kilogramos deben ser mayores a 0.";
   assert.deepEqual(ubicarError({ mensaje: kg, codigo: "DATO_INCOMPLETO", campo: "kg" }), {
     destino: "kg",
-    mensaje: kg,
+    mensaje: MENSAJES_INCOMPLETO.kg,
+  });
+  assert.deepEqual(ubicarError({ mensaje: "x", codigo: "DATO_INCOMPLETO", campo: "foto" }), {
+    destino: "foto",
+    mensaje: "Dato incompleto. Agrega una foto de la captura.",
+  });
+  assert.equal(
+    ubicarError({ mensaje: "x", codigo: "DATO_INCOMPLETO", campo: "especie" }).mensaje,
+    "Dato incompleto. Elige una especie.",
+  );
+  // Precio vacío o en 0: texto del documento. Precio de $6,000: el de la base, con el máximo.
+  const precio = "Dato incompleto: el precio por kg debe ser mayor a 0 (máximo $5,000).";
+  const errorPrecio = { mensaje: precio, codigo: "DATO_INCOMPLETO", campo: "precio" } as const;
+  assert.equal(ubicarError(errorPrecio).mensaje, "Dato incompleto. El precio debe ser mayor a $0.");
+  assert.equal(ubicarError(errorPrecio, 0).mensaje, "Dato incompleto. El precio debe ser mayor a $0.");
+  assert.equal(ubicarError(errorPrecio, 6000).mensaje, precio);
+});
+
+test("ubicarError: campo del formulario, general o conexión", () => {
+  const maximo = "Revisa la cantidad: máximo 2,000 kg por publicación.";
+  assert.deepEqual(ubicarError({ mensaje: maximo, codigo: "DATO_INVALIDO", campo: "kg" }), {
+    destino: "kg",
+    mensaje: maximo,
   });
   assert.equal(ubicarError({ mensaje: "x", codigo: "DATO_INVALIDO", campo: "notas" }).destino, "notas");
   const rol = "Solo los pescadores con cuenta aprobada pueden publicar.";

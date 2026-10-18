@@ -1,11 +1,12 @@
 import { Cargando } from "@/components/cargando";
 import { FormularioPublicar } from "@/components/formulario-publicar";
-import { Button } from "@/components/ui/button";
+import { Aviso } from "@/components/fd/aviso";
+import { BotonEnlace } from "@/components/fd/boton";
+import { ErrorCarga } from "@/components/fd/error-carga";
 import { horaLocalSonora } from "@/lib/publicar";
 import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
 import type { FilaEspecie } from "@/lib/tipos";
-import Link from "next/link";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -13,8 +14,11 @@ export const metadata: Metadata = { title: "Publicar captura" };
 
 export default function PaginaPublicar() {
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
-      <h1 className="text-2xl font-bold">Publicar captura</h1>
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-1">
+        <h1 className="font-display text-[26px] font-bold leading-8 text-ink">Publicar captura</h1>
+        <p className="text-sm text-ink-muted">Aparece en el catálogo durante 24 h desde la hora de captura.</p>
+      </div>
       <Suspense fallback={<Cargando />}>
         <Contenido />
       </Suspense>
@@ -26,21 +30,18 @@ export default function PaginaPublicar() {
 async function Contenido() {
   const perfil = await exigirRol(["pescador"]);
 
-  // El aviso de cuenta pendiente ya lo pinta el layout de /pescador.
+  // Sin aprobación no hay formulario. El aviso de cuenta en revisión ya lo pinta el layout de /pescador.
   if (perfil.estado !== "aprobado") {
     return (
-      <div className="flex flex-col items-start gap-3">
+      <div className="flex flex-col items-start gap-4">
         {perfil.estado === "rechazado" && (
-          <p className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
-            Tu cuenta no está aprobada para publicar.
-          </p>
+          <Aviso tono="alerta" titulo="Tu cuenta no está aprobada para publicar">
+            <p>Si crees que es un error, comunícate con el administrador.</p>
+          </Aviso>
         )}
-        <Link
-          href="/pescador"
-          className="inline-flex min-h-11 items-center text-sm font-medium underline-offset-4 hover:underline"
-        >
-          ← Volver a Mis capturas
-        </Link>
+        <BotonEnlace variante="secundario" href="/pescador">
+          Ver mis capturas
+        </BotonEnlace>
       </div>
     );
   }
@@ -53,19 +54,7 @@ async function Contenido() {
     .order("nombre")
     .overrideTypes<Pick<FilaEspecie, "id" | "nombre">[], { merge: false }>();
 
-  if (error) {
-    return (
-      <div
-        role="alert"
-        className="flex flex-col items-start gap-3 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900"
-      >
-        <p>No pudimos cargar las especies. Revisa tu conexión e inténtalo de nuevo.</p>
-        <Button asChild variant="outline" className="h-11">
-          <a href="/pescador/publicar">Reintentar</a>
-        </Button>
-      </div>
-    );
-  }
+  if (error) return <ErrorCarga titulo="No pudimos cargar las especies" href="/pescador/publicar" />;
 
   // La hora inicial sale del servidor para que coincida al hidratar.
   return (

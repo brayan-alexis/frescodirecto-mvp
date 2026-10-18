@@ -6,6 +6,19 @@ export const CAMPOS_PUBLICAR = ["especie", "kg", "precio", "capturada_en", "foto
 export type CampoPublicar = (typeof CAMPOS_PUBLICAR)[number];
 
 export const DATO_INCOMPLETO = "Dato incompleto";
+
+/**
+ * "Dato incompleto." + cómo corregirlo (docs/ui/IMPLEMENTAR_UI.md, Fase 3). Se usan para
+ * un campo vacío antes de enviar y para el hint de la base cuando responde DATO_INCOMPLETO.
+ */
+export const MENSAJES_INCOMPLETO = {
+  especie: "Dato incompleto. Elige una especie.",
+  kg: "Dato incompleto. Los kilos deben ser mayores a 0.",
+  precio: "Dato incompleto. El precio debe ser mayor a $0.",
+  capturada_en: "Dato incompleto. Indica la hora de captura.",
+  foto: "Dato incompleto. Agrega una foto de la captura.",
+} as const satisfies Partial<Record<CampoPublicar, string>>;
+
 export const ERROR_CONEXION = "No se pudo publicar. Revisa tu conexión e intenta de nuevo.";
 export const ERROR_SUBIDA = "No se pudo subir la foto. Revisa tu conexión e intenta de nuevo.";
 export const ERROR_FOTO = "No pudimos leer la foto. Toma otra o elige una en JPG.";
@@ -51,12 +64,26 @@ export function camposVacios(v: {
 }
 
 /**
- * Dónde mostrar un error de publicar_captura: junto a su campo o arriba del formulario.
+ * Dónde mostrar un error de publicar_captura: junto a su campo (el hint) o arriba del formulario.
+ * Con DATO_INCOMPLETO el texto es el de MENSAJES_INCOMPLETO; los demás códigos traen la cifra
+ * real en el mensaje de la base ("máximo 2,000 kg"), así que se muestra tal cual.
+ * `precioEnviado`: la base también responde DATO_INCOMPLETO con un precio mayor a $5,000;
+ * si el precio era positivo, "debe ser mayor a $0" no aplica y va el mensaje de la base.
  * Sin código es un error de red o inesperado (puede venir en inglés): se muestra uno genérico.
  */
-export function ubicarError(e: ErrorRpc): { destino: CampoPublicar | "general"; mensaje: string } {
+export function ubicarError(
+  e: ErrorRpc,
+  precioEnviado: number | null = null,
+): { destino: CampoPublicar | "general"; mensaje: string } {
   const campo = CAMPOS_PUBLICAR.find((c) => c === e.campo);
-  if (campo) return { destino: campo, mensaje: e.mensaje };
+  if (campo) {
+    const traducido =
+      e.codigo === "DATO_INCOMPLETO" && campo in MENSAJES_INCOMPLETO
+        ? MENSAJES_INCOMPLETO[campo as keyof typeof MENSAJES_INCOMPLETO]
+        : null;
+    const precioPositivo = campo === "precio" && precioEnviado != null && precioEnviado > 0;
+    return { destino: campo, mensaje: traducido && !precioPositivo ? traducido : e.mensaje };
+  }
   if (e.codigo == null) return { destino: "general", mensaje: ERROR_CONEXION };
   return { destino: "general", mensaje: e.mensaje };
 }
