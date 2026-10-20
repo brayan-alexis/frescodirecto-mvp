@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { AvisoAcceso } from "@/components/aviso-acceso";
-import { Encabezado } from "@/components/encabezado";
+import { Encabezado, NavegacionInferior } from "@/components/encabezado";
+import { atkinson, atkinsonMono, playfair } from "./fuentes";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -11,16 +11,18 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "FrescoDirecto · Pescado del día en Guaymas",
-  description:
-    "Los pescadores de Guaymas publican su captura del día y las marisquerías de Guaymas y San Carlos la piden y la pagan en la app.",
+  // Cada página pone su título y la plantilla agrega la marca: "Mis pedidos · FrescoDirecto".
+  title: {
+    default: "FrescoDirecto · Pescado del día",
+    template: "%s · FrescoDirecto",
+  },
+  description: "Pescado del día de Guaymas y San Carlos, del muelle a la marisquería.",
 };
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  display: "swap",
-  subsets: ["latin"],
-});
+// En Next 16 el color de la barra del navegador va en viewport, no en metadata.
+export const viewport: Viewport = {
+  themeColor: "#16233F",
+};
 
 export default function RootLayout({
   children,
@@ -28,18 +30,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es-MX">
-      <body className={`${geistSans.className} flex min-h-svh flex-col antialiased`}>
+    <html
+      lang="es-MX"
+      className={`${playfair.variable} ${atkinson.variable} ${atkinsonMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="flex min-h-svh flex-col">
         <Encabezado />
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+        <main className="mx-auto w-full max-w-[480px] flex-1 px-4 py-6">
           <Suspense fallback={null}>
             <AvisoAcceso />
           </Suspense>
           {children}
         </main>
-        <footer className="border-t px-4 py-6 text-center text-xs text-muted-foreground">
+        <footer className="border-t border-line px-4 py-6 text-center text-xs text-ink-muted">
           MVP académico · Todos los datos son ficticios
         </footer>
+        {/* Después del pie: es sticky y al final del scroll queda abajo de todo. */}
+        <NavegacionInferior />
       </body>
     </html>
   );

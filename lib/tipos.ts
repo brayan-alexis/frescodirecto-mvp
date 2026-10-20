@@ -183,6 +183,21 @@ export interface MiCalificacion {
   creado_en: string;
 }
 
+/** Fila de rpc('disputas_abiertas'), solo para el admin: pedidos con incidencia y pago retenido. */
+export interface DisputaAbierta {
+  pedido_id: string;
+  folio: string;
+  recibo: string;
+  especie: string;
+  kg: number;
+  subtotal: number;
+  comision: number;
+  restaurante: string;
+  pescador: string;
+  nota_incidencia: string | null;
+  reportado_en: string;
+}
+
 // Errores de las funciones: message es el texto para el usuario, details el código y hint el campo.
 
 export const CODIGOS_ERROR = [

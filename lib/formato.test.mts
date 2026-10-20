@@ -1,16 +1,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  esHoySonora,
+  fechaLarga,
   formatoDinero,
   formatoEstrellas,
   formatoKg,
   haceCuanto,
+  horaExacta,
+  horasDesde,
+  horasRestantes,
   horaSonora,
   formatoReputacion,
 } from "./formato.ts";
 
-test("formatoDinero: sin decimales si el monto es entero", () => {
-  assert.equal(formatoDinero(95), "$95");
+test("formatoDinero: siempre con centavos", () => {
+  assert.equal(formatoDinero(95), "$95.00");
   assert.equal(formatoDinero(1250.5), "$1,250.50");
   assert.equal(formatoDinero(997.5), "$997.50");
 });
@@ -38,6 +43,29 @@ test("horaSonora: hoy, ayer y días anteriores en hora de Sonora", () => {
   assert.match(horaSonora("2026-10-14T13:00:00Z", ahora), /^14 oct\.? 6:00\sa\.\s?m\.$/);
 });
 
+test("esHoySonora: mismo día de calendario en hora de Sonora", () => {
+  assert.equal(esHoySonora("2026-10-17T12:40:00Z", ahora), true);
+  assert.equal(esHoySonora("2026-10-17T05:20:00Z", ahora), false); // 17 en UTC, 16 en Sonora
+  assert.equal(esHoySonora("2026-10-18T05:00:00Z", ahora), true); // 18 en UTC, 17 a las 22:00 en Sonora
+});
+
+test("horasDesde: minutos u horas desde la fecha", () => {
+  assert.equal(horasDesde("2026-10-17T14:20:00Z", ahora), "hace 40 min");
+  assert.equal(horasDesde("2026-10-17T11:30:00Z", ahora), "hace 3 h");
+});
+
+test("horasRestantes: horas enteras del catálogo de 24 h, nunca negativas", () => {
+  assert.equal(horasRestantes("2026-10-17T12:00:00Z", ahora), 21);
+  assert.equal(horasRestantes("2026-10-17T11:30:00Z", ahora), 20); // 20.5 h → 20
+  assert.equal(horasRestantes("2026-10-17T15:00:00Z", ahora), 24);
+  assert.equal(horasRestantes("2026-10-16T10:00:00Z", ahora), 0);
+});
+
+test("horaExacta: 24 h y fecha corta en hora de Sonora", () => {
+  assert.match(horaExacta("2026-10-17T13:52:00Z"), /^06:52 · 17 oct\.?$/);
+  assert.match(horaExacta("2026-10-17T05:20:00Z"), /^22:20 · 16 oct\.?$/);
+});
+
 test("formatoReputacion: promedio con 3 o más calificaciones; si no, Nuevo", () => {
   assert.equal(formatoReputacion(4.3, 11, "corta"), "★ 4.3 (11)");
   assert.equal(formatoReputacion(4.3, 11, "larga"), "★ 4.3 · 11 calificaciones");
@@ -49,4 +77,11 @@ test("formatoEstrellas: llenas y vacías hasta 5", () => {
   assert.equal(formatoEstrellas(5), "★★★★★");
   assert.equal(formatoEstrellas(4), "★★★★☆");
   assert.equal(formatoEstrellas(1), "★☆☆☆☆");
+});
+
+test("fechaLarga: día de la semana con mayúscula, en hora de Sonora", () => {
+  assert.equal(fechaLarga(new Date("2026-10-17T15:00:00Z")), "Sábado 17 de octubre");
+  // 05:20 UTC del 18 todavía es el sábado 17 en Sonora (UTC−7).
+  assert.equal(fechaLarga(new Date("2026-10-18T05:20:00Z")), "Sábado 17 de octubre");
+  assert.equal(fechaLarga(new Date("2026-10-18T07:30:00Z")), "Domingo 18 de octubre");
 });

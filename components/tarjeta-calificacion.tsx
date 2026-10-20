@@ -1,8 +1,10 @@
 "use client";
 
 import { useAvisoAccion } from "@/components/aviso-accion";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { BotonActualizar } from "@/components/boton-actualizar";
+import { Aviso } from "@/components/fd/aviso";
+import { Boton } from "@/components/fd/boton";
+import { MensajeCampo, idError } from "@/components/fd/campo";
 import { createClient } from "@/lib/supabase/client";
 import { leerErrorRpc } from "@/lib/tipos";
 import { cn } from "@/lib/utils";
@@ -20,9 +22,6 @@ type Props = {
 type Errores = { general?: string; estrellas?: string; comentario?: string; recargar?: boolean };
 
 const MAX_COMENTARIO = 280;
-const ALERTA = "rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900";
-const TEXTAREA =
-  "w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 const ERROR_CONEXION = "No se pudo enviar la calificación. Revisa tu conexión e intenta de nuevo.";
 
 /** Calificación opcional del pescador. La base valida quién, cuándo y que sea una sola vez. */
@@ -42,10 +41,9 @@ export function TarjetaCalificacion({ pedidoId, contraparte, titulo }: Props) {
   if (oculta) return null;
 
   const idTitulo = `${id}-titulo`;
-  const idErrorEstrellas = `${id}-error-estrellas`;
+  const idEstrellas = `${id}-estrellas`;
   const idComentario = `${id}-comentario`;
   const idContador = `${id}-contador`;
-  const idErrorComentario = `${id}-error-comentario`;
 
   const enviar = async () => {
     if (enviandoRef.current) return;
@@ -75,38 +73,36 @@ export function TarjetaCalificacion({ pedidoId, contraparte, titulo }: Props) {
   };
 
   return (
-    <section aria-labelledby={idTitulo} className="flex flex-col gap-3 rounded-xl border bg-card p-3 text-sm">
+    <section
+      aria-labelledby={idTitulo}
+      className="flex flex-col gap-4 rounded-lg bg-surface p-4 text-sm text-ink shadow-card"
+    >
       <div className="flex flex-col gap-0.5">
         {titulo && (
           <Link
             href={`/pedidos/${pedidoId}`}
-            className="inline-flex min-h-11 items-center self-start font-medium underline underline-offset-4"
+            className="inline-flex min-h-11 items-center self-start font-mono font-semibold underline underline-offset-4"
           >
             {titulo}
           </Link>
         )}
-        <h3 id={idTitulo} className="text-base font-semibold">
+        <h3 id={idTitulo} className="text-base font-bold">
           ¿Cómo te fue con {contraparte}?
         </h3>
-        <p className="text-muted-foreground">Es opcional y ayuda a otros restaurantes a elegir proveedor.</p>
+        <p className="text-ink-muted">Es opcional y ayuda a otros restaurantes a elegir proveedor.</p>
       </div>
 
       {errores.general && (
-        <div role="alert" className={cn(ALERTA, "flex flex-col items-start gap-3")}>
-          <p>{errores.general}</p>
-          {errores.recargar && (
-            <Button type="button" variant="outline" className="h-11" onClick={() => router.refresh()}>
-              Recargar
-            </Button>
-          )}
-        </div>
+        <Aviso tono="error" titulo={errores.general}>
+          {errores.recargar && <BotonActualizar etiqueta="Recargar" className="mt-3" />}
+        </Aviso>
       )}
 
       <fieldset
         className="flex flex-col gap-1"
-        aria-describedby={errores.estrellas ? idErrorEstrellas : undefined}
+        aria-describedby={errores.estrellas ? idError(idEstrellas) : undefined}
       >
-        <legend className="mb-1 font-medium">Satisfacción</legend>
+        <legend className="mb-1 font-bold">Satisfacción</legend>
         <div className="flex">
           {[1, 2, 3, 4, 5].map((n) => (
             <label key={n} className="relative">
@@ -124,8 +120,8 @@ export function TarjetaCalificacion({ pedidoId, contraparte, titulo }: Props) {
                 aria-hidden
                 className={cn(
                   "flex size-11 cursor-pointer items-center justify-center rounded-md text-3xl leading-none",
-                  "peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-disabled:cursor-not-allowed",
-                  estrellas != null && n <= estrellas ? "text-amber-500" : "text-muted-foreground",
+                  "peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus peer-disabled:cursor-not-allowed",
+                  estrellas != null && n <= estrellas ? "text-alerta" : "text-ink-muted",
                 )}
               >
                 {estrellas != null && n <= estrellas ? "★" : "☆"}
@@ -133,18 +129,14 @@ export function TarjetaCalificacion({ pedidoId, contraparte, titulo }: Props) {
             </label>
           ))}
         </div>
-        <p className="text-muted-foreground">
-          {estrellas != null ? `${estrellas} de 5 estrellas` : "Toca una estrella"}
-        </p>
-        {errores.estrellas && (
-          <p id={idErrorEstrellas} role="alert" className="font-medium text-destructive">
-            {errores.estrellas}
-          </p>
-        )}
+        <p className="text-ink-muted">{estrellas != null ? `${estrellas} de 5 estrellas` : "Toca una estrella"}</p>
+        <MensajeCampo id={idEstrellas} error={errores.estrellas} />
       </fieldset>
 
-      <div className="grid gap-2">
-        <Label htmlFor={idComentario}>Comentario (opcional)</Label>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={idComentario} className="font-bold">
+          Comentario (opcional)
+        </label>
         <textarea
           id={idComentario}
           rows={3}
@@ -152,28 +144,27 @@ export function TarjetaCalificacion({ pedidoId, contraparte, titulo }: Props) {
           value={comentario}
           onChange={(e) => setComentario(e.target.value)}
           disabled={enviando}
-          placeholder="Ej.: llegó fresco y a tiempo"
+          placeholder="Ej.: llegó a tiempo y bien empacado"
           aria-invalid={errores.comentario ? true : undefined}
-          aria-describedby={errores.comentario ? `${idContador} ${idErrorComentario}` : idContador}
-          className={TEXTAREA}
+          aria-describedby={errores.comentario ? `${idContador} ${idError(idComentario)}` : idContador}
+          className={cn(
+            "w-full rounded-md bg-surface px-3 py-2 text-base text-ink outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+            errores.comentario ? "border-2 border-error" : "border border-line-strong",
+          )}
         />
-        <p id={idContador} className="text-right text-xs text-muted-foreground">
+        <p id={idContador} className="text-right text-[13px] text-ink-muted">
           {comentario.length}/{MAX_COMENTARIO}
         </p>
-        {errores.comentario && (
-          <p id={idErrorComentario} role="alert" className="font-medium text-destructive">
-            {errores.comentario}
-          </p>
-        )}
+        <MensajeCampo id={idComentario} error={errores.comentario} />
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" className="h-11" disabled={enviando} onClick={enviar}>
-          {enviando ? "Enviando…" : "Enviar calificación"}
-        </Button>
-        <Button type="button" variant="outline" className="h-11" disabled={enviando} onClick={() => setOculta(true)}>
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+        <Boton variante="secundario" disabled={enviando} onClick={() => setOculta(true)}>
           Ahora no
-        </Button>
+        </Boton>
+        <Boton bloque ocupado={enviando} textoOcupado="Enviando…" onClick={enviar}>
+          Enviar calificación
+        </Boton>
       </div>
     </section>
   );

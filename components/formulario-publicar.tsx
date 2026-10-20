@@ -1,25 +1,29 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Aviso } from "@/components/fd/aviso";
+import { BarraAccion } from "@/components/fd/barra-accion";
+import { Boton } from "@/components/fd/boton";
+import { Campo, atributosControl, claseControl } from "@/components/fd/campo";
+import { CampoFoto } from "@/components/fd/campo-foto";
 import { comprimirFoto } from "@/lib/comprimir-foto";
+import { formatoDinero, formatoKg } from "@/lib/formato";
 import {
+  CAMPOS_PUBLICAR,
   camposVacios,
-  DATO_INCOMPLETO,
   ERROR_FOTO,
   ERROR_SUBIDA,
   horaSonoraAIso,
   leerDecimal,
+  MENSAJES_INCOMPLETO,
   ubicarError,
   type CampoPublicar,
 } from "@/lib/publicar";
 import { createClient } from "@/lib/supabase/client";
 import { leerErrorRpc, type FilaEspecie } from "@/lib/tipos";
 import { cn } from "@/lib/utils";
-import { Camera } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   especies: Pick<FilaEspecie, "id" | "nombre">[];
@@ -31,20 +35,47 @@ type Errores = Partial<Record<CampoPublicar | "general", string>>;
 type Foto = { blob: Blob; url: string };
 
 const MAX_NOTAS = 280;
+const AYUDA_NOTAS = "Sin teléfonos ni correos: el contacto se comparte al aceptar un pedido pagado.";
 
+/**
+ * Publicar captura. Devuelve el formulario con su barra de acción fija adentro:
+ * la barra queda abajo mientras se llenan los campos.
+ */
 export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) {
   const router = useRouter();
+  const [especie, setEspecie] = useState("");
+  const [kg, setKg] = useState("");
+  const [precio, setPrecio] = useState("");
+  const [capturadaEn, setCapturadaEn] = useState(horaInicial);
+  const [notas, setNotas] = useState("");
   const [errores, setErrores] = useState<Errores>({});
+  // Sube con cada envío fallido: el efecto lleva el foco al primer campo con error.
+  const [intento, setIntento] = useState(0);
   const [enviando, setEnviando] = useState(false);
+  // `disabled` llega hasta que React repinta; el ref frena un segundo clic inmediato.
+  const enviandoRef = useRef(false);
   const [preparandoFoto, setPreparandoFoto] = useState(false);
   const [foto, setFoto] = useState<Foto | null>(null);
   // Ruta ya subida de esta foto: si la base rechaza un dato, el reintento no la sube otra vez.
   const [rutaSubida, setRutaSubida] = useState<string | null>(null);
-  const [largoNotas, setLargoNotas] = useState(0);
 
   useEffect(() => () => {
     if (foto) URL.revokeObjectURL(foto.url);
   }, [foto]);
+
+  // Al fallar, el foco va al primer campo con error, en el orden del formulario.
+  useEffect(() => {
+    if (intento === 0) return;
+    const primero = CAMPOS_PUBLICAR.find((campo) => errores[campo]);
+    if (primero) document.getElementById(primero)?.focus();
+    // Solo tras un envío: los errores ya están puestos cuando sube `intento`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intento]);
+
+  const fallar = (nuevos: Errores) => {
+    setErrores(nuevos);
+    setIntento((n) => n + 1);
+  };
 
   const elegirFoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const archivo = e.target.files?.[0];
@@ -64,22 +95,20 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
 
   const publicar = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const datos = new FormData(e.currentTarget);
-    const texto = (campo: string) => String(datos.get(campo) ?? "");
-    const valores = {
-      especie: texto("especie"),
-      kg: texto("kg"),
-      precio: texto("precio"),
-      capturada_en: texto("capturada_en"),
-    };
+    if (enviandoRef.current) return;
 
-    const vacios = camposVacios({ ...valores, foto: foto != null });
+    const vacios = camposVacios({ especie, kg, precio, capturada_en: capturadaEn, foto: foto != null });
     if (vacios.length > 0 || !foto) {
-      setErrores(Object.fromEntries(vacios.map((campo) => [campo, DATO_INCOMPLETO])));
+      fallar(
+        Object.fromEntries(
+          vacios.map((campo) => [campo, MENSAJES_INCOMPLETO[campo as keyof typeof MENSAJES_INCOMPLETO]]),
+        ),
+      );
       return;
     }
 
     setErrores({});
+    enviandoRef.current = true;
     setEnviando(true);
     const supabase = createClient();
 
@@ -90,7 +119,8 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
         .from("capturas")
         .upload(nueva, foto.blob, { contentType: "image/jpeg" });
       if (error) {
-        setErrores({ foto: ERROR_SUBIDA });
+        fallar({ foto: ERROR_SUBIDA });
+        enviandoRef.current = false;
         setEnviando(false);
         return;
       }
@@ -98,19 +128,21 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
       setRutaSubida(nueva);
     }
 
-    const notas = texto("notas").trim();
+    const precioKg = leerDecimal(precio);
+    const notasLimpias = notas.trim();
     const { error } = await supabase.rpc("publicar_captura", {
-      p_especie_id: Number(valores.especie),
-      p_kg: leerDecimal(valores.kg),
-      p_precio_kg: leerDecimal(valores.precio),
+      p_especie_id: Number(especie),
+      p_kg: leerDecimal(kg),
+      p_precio_kg: precioKg,
       p_foto_path: ruta,
-      p_capturada_en: horaSonoraAIso(valores.capturada_en),
-      p_notas: notas || null,
+      p_capturada_en: horaSonoraAIso(capturadaEn),
+      p_notas: notasLimpias || null,
     });
 
     if (error) {
-      const { destino, mensaje } = ubicarError(leerErrorRpc(error));
-      setErrores({ [destino]: mensaje });
+      const { destino, mensaje } = ubicarError(leerErrorRpc(error), precioKg);
+      fallar({ [destino]: mensaje });
+      enviandoRef.current = false;
       setEnviando(false);
       return;
     }
@@ -118,35 +150,28 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
     router.push("/pescador?publicada=1");
   };
 
-  const errorDe = (campo: CampoPublicar) =>
-    errores[campo] && (
-      <p id={`error-${campo}`} role="alert" className="text-sm font-medium text-destructive">
-        {errores[campo]}
-      </p>
-    );
-  const invalido = (campo: CampoPublicar) =>
-    errores[campo] ? { "aria-invalid": true, "aria-describedby": `error-${campo}` } : {};
+  // Resumen de la barra con lo escrito; solo para mostrar.
+  const nombreEspecie = especies.find((e) => String(e.id) === especie)?.nombre;
+  const kgEscritos = leerDecimal(kg);
+  const precioEscrito = leerDecimal(precio);
+  const hayResumen = nombreEspecie != null || kgEscritos != null || precioEscrito != null;
 
   return (
     <form onSubmit={publicar} noValidate className="flex flex-col gap-5">
       {errores.general && (
-        <p
-          role="alert"
-          className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900"
-        >
-          {errores.general}
-        </p>
+        <Aviso tono="error" titulo="No se publicó la captura">
+          <p>{errores.general}</p>
+        </Aviso>
       )}
 
-      <div className="grid gap-2">
-        <Label htmlFor="especie">Especie</Label>
+      <Campo id="especie" etiqueta="Especie" error={errores.especie}>
         <select
-          id="especie"
+          {...atributosControl("especie", errores.especie)}
           name="especie"
           required
-          defaultValue=""
-          {...invalido("especie")}
-          className="h-11 w-full rounded-md border border-input bg-transparent px-3 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          value={especie}
+          onChange={(e) => setEspecie(e.target.value)}
+          className={cn(claseControl, "w-full cursor-pointer")}
         >
           <option value="" disabled>
             Elige la especie
@@ -157,115 +182,106 @@ export function FormularioPublicar({ especies, usuarioId, horaInicial }: Props) 
             </option>
           ))}
         </select>
-        {errorDe("especie")}
-      </div>
+      </Campo>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="grid content-start gap-2">
-          <Label htmlFor="kg">kg</Label>
-          <Input
-            id="kg"
-            name="kg"
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="12.5"
-            required
-            {...invalido("kg")}
-            className="h-11"
-          />
-          {errorDe("kg")}
-        </div>
-        <div className="grid content-start gap-2">
-          <Label htmlFor="precio">Precio por kg</Label>
-          <Input
-            id="precio"
-            name="precio"
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="$155"
-            required
-            {...invalido("precio")}
-            className="h-11"
-          />
-          {errorDe("precio")}
-        </div>
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="capturada_en">Hora de captura (hora de Sonora)</Label>
-        <Input
-          id="capturada_en"
-          name="capturada_en"
-          type="datetime-local"
-          defaultValue={horaInicial}
+      <div className="grid grid-cols-2 items-start gap-3">
+        <Campo
+          id="kg"
+          etiqueta="Kilos"
+          sufijo="kg"
+          error={errores.kg}
+          name="kg"
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
+          placeholder="12.5"
           required
-          {...invalido("capturada_en")}
-          className="h-11 min-w-0"
+          value={kg}
+          onChange={(e) => setKg(e.target.value)}
         />
-        {errorDe("capturada_en")}
+        <Campo
+          id="precio"
+          etiqueta="Precio por kilo"
+          prefijo="$"
+          error={errores.precio}
+          name="precio"
+          type="text"
+          inputMode="decimal"
+          autoComplete="off"
+          placeholder="155"
+          required
+          value={precio}
+          onChange={(e) => setPrecio(e.target.value)}
+        />
       </div>
 
-      <div className="grid gap-2">
-        <span className="text-sm font-medium leading-none">Foto</span>
-        {foto && (
-          // eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob:)
-          <img
-            src={foto.url}
-            alt="Vista previa de la foto"
-            className="aspect-[4/3] w-full rounded-xl bg-muted object-cover"
-          />
-        )}
-        <label
-          className={cn(
-            "flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-3 text-base font-medium focus-within:ring-2 focus-within:ring-ring hover:bg-accent",
-            errores.foto ? "border-destructive" : "border-input",
-            preparandoFoto && "cursor-wait opacity-60",
-          )}
-        >
-          <Camera aria-hidden className="size-5" />
-          {preparandoFoto ? "Preparando foto…" : foto ? "Cambiar foto" : "Tomar foto"}
-          <input
-            type="file"
-            name="foto"
-            accept="image/*"
-            capture="environment"
-            disabled={preparandoFoto || enviando}
-            onChange={elegirFoto}
-            {...invalido("foto")}
-            className="sr-only"
-          />
-        </label>
-        {errorDe("foto")}
-      </div>
+      {/* El control de siempre (fecha y hora): la base acepta capturas de las últimas 24 h. */}
+      <Campo
+        id="capturada_en"
+        etiqueta="Hora de captura"
+        ayuda="En hora de Sonora. No puede ser después de ahora."
+        error={errores.capturada_en}
+        name="capturada_en"
+        type="datetime-local"
+        required
+        value={capturadaEn}
+        onChange={(e) => setCapturadaEn(e.target.value)}
+      />
 
-      <div className="grid gap-2">
-        <Label htmlFor="notas">Notas (opcional)</Label>
-        <textarea
+      <CampoFoto
+        id="foto"
+        name="foto"
+        etiqueta="Foto de la captura"
+        vistaPrevia={foto?.url ?? null}
+        error={errores.foto}
+        preparando={preparandoFoto}
+        disabled={enviando}
+        onChange={elegirFoto}
+      />
+
+      <div className="flex flex-col gap-1">
+        <Campo
           id="notas"
-          name="notas"
-          rows={3}
-          maxLength={MAX_NOTAS}
-          onChange={(e) => setLargoNotas(e.target.value.length)}
-          aria-invalid={errores.notas ? true : undefined}
-          aria-describedby={errores.notas ? "error-notas ayuda-notas" : "ayuda-notas"}
-          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        />
-        <div className="flex justify-between gap-3 text-sm text-muted-foreground">
-          <p id="ayuda-notas">
-            Sin teléfonos ni correos: el contacto se comparte al aceptar un pedido pagado
-          </p>
-          <span aria-hidden className="shrink-0">
-            {largoNotas}/{MAX_NOTAS}
-          </span>
-        </div>
-        {errorDe("notas")}
+          etiqueta="Notas (opcional)"
+          ayuda={AYUDA_NOTAS}
+          error={errores.notas}
+        >
+          <textarea
+            {...atributosControl("notas", errores.notas, AYUDA_NOTAS)}
+            name="notas"
+            rows={3}
+            maxLength={MAX_NOTAS}
+            value={notas}
+            onChange={(e) => setNotas(e.target.value)}
+            className={cn(claseControl, "self-stretch py-2")}
+          />
+        </Campo>
+        <p aria-hidden className="text-right text-[13px] text-ink-muted tabular-nums">
+          {notas.length}/{MAX_NOTAS}
+        </p>
       </div>
 
-      <Button type="submit" className="h-11 w-full text-base" disabled={enviando || preparandoFoto}>
-        {enviando ? "Publicando…" : "Publicar"}
-      </Button>
+      <BarraAccion
+        resumen={
+          hayResumen
+            ? {
+                izquierda: `${nombreEspecie ?? "Sin especie"} · ${kgEscritos != null ? formatoKg(kgEscritos) : "— kg"}`,
+                derecha: `${precioEscrito != null ? formatoDinero(precioEscrito) : "—"} /kg`,
+              }
+            : undefined
+        }
+      >
+        <Boton
+          type="submit"
+          bloque
+          icono={Plus}
+          ocupado={enviando}
+          textoOcupado="Publicando…"
+          disabled={preparandoFoto}
+        >
+          Publicar captura
+        </Boton>
+      </BarraAccion>
     </form>
   );
 }

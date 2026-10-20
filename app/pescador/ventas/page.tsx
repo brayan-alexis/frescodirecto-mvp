@@ -1,23 +1,40 @@
+import { AvisoAccionProvider } from "@/components/aviso-accion";
+import { AvisoModoPrueba } from "@/components/aviso-modo-prueba";
 import { BotonActualizar } from "@/components/boton-actualizar";
-import { Cargando } from "@/components/cargando";
-import { ListaPedidos } from "@/components/lista-pedidos";
-import { Button } from "@/components/ui/button";
+import { TarjetaVenta, TarjetaVentaCompacta } from "@/components/tarjeta-venta";
+import { BotonEnlace } from "@/components/fd/boton";
+import { ErrorCarga } from "@/components/fd/error-carga";
+import { EsqueletoTarjetas } from "@/components/fd/esqueleto-tarjetas";
+import { EstadoVacio } from "@/components/fd/estado-vacio";
 import { formatoDinero } from "@/lib/formato";
-import { resumenVentas } from "@/lib/seguimiento";
+import { MAX_HISTORIAL, resumenHoy, resumenVentas, separarPedidos } from "@/lib/seguimiento";
 import { exigirRol } from "@/lib/sesion";
 import { createClient } from "@/lib/supabase/server";
 import type { MiPedido } from "@/lib/tipos";
-import Link from "next/link";
+import { Plus, Receipt } from "lucide-react";
+import type { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = { title: "Ventas" };
 
 export default function PaginaVentas() {
   return (
-    <Suspense fallback={<Cargando />}>
+    <Suspense fallback={<Esqueleto />}>
       <Contenido />
     </Suspense>
   );
 }
 
+function Titulo() {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h1 className="font-display text-[26px] font-bold leading-8 text-ink">Ventas</h1>
+      <BotonActualizar />
+    </div>
+  );
+}
+
+// mis_pedidos ya viene del más reciente al más antiguo, con pago y teléfono (solo si está activo).
 async function Contenido() {
   const perfil = await exigirRol(["pescador"]);
 
@@ -26,57 +43,134 @@ async function Contenido() {
     .rpc("mis_pedidos")
     .eq("mi_papel", "pescador");
 
+  if (error) {
+    return (
+      <div className="flex flex-col gap-4">
+        <Titulo />
+        <ErrorCarga titulo="No pudimos cargar tus ventas" href="/pescador/ventas" />
+      </div>
+    );
+  }
+
   const pedidos: MiPedido[] = data ?? [];
+  // Después de leer la sesión y mis_pedidos, así que la hora es de esta petición.
+  const ahora = new Date();
+
+  if (pedidos.length === 0) {
+    return (
+      <div className="flex flex-col gap-4">
+        <Titulo />
+        <EstadoVacio
+          icono={Receipt}
+          titulo="Aún no tienes pedidos"
+          ayuda="Cuando una marisquería pida de tu captura, el pedido aparece aquí."
+          accion={
+            perfil.estado === "aprobado" && (
+              <BotonEnlace variante="secundario" href="/pescador/publicar" icono={Plus}>
+                Publicar captura
+              </BotonEnlace>
+            )
+          }
+        />
+      </div>
+    );
+  }
+
   // Solo sumas para mostrar: cada monto viene de mis_pedidos.
   const { porCobrar, cobrado } = resumenVentas(pedidos);
+  const hoy = resumenHoy(pedidos, ahora);
+  const { activos, historial } = separarPedidos(pedidos);
+  const porResponder = activos.filter((p) => p.estado === "solicitado");
+  const enCurso = activos.filter((p) => p.estado !== "solicitado");
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Mis ventas</h1>
-        <BotonActualizar />
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <Titulo />
+          <p className="text-sm text-ink-muted">
+            Hoy · {hoy.pedidos} {hoy.pedidos === 1 ? "pedido" : "pedidos"} ·{" "}
+            <span className="tabular-nums">{formatoDinero(hoy.total)}</span> en pedidos
+          </p>
+        </div>
+        <AvisoModoPrueba />
+        <dl aria-label="Resumen de pagos" className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1 rounded-lg bg-surface p-3 shadow-card">
+            <dt className="text-[13px] text-ink-muted">Por cobrar (retenido)</dt>
+            <dd className="text-xl font-extrabold tabular-nums text-ink">{formatoDinero(porCobrar)}</dd>
+          </div>
+          <div className="flex flex-col gap-1 rounded-lg bg-surface p-3 shadow-card">
+            <dt className="text-[13px] text-ink-muted">Cobrado</dt>
+            <dd className="text-xl font-extrabold tabular-nums text-ink">{formatoDinero(cobrado)}</dd>
+          </div>
+        </dl>
       </div>
 
-      {error ? (
-        <div
-          role="alert"
-          className="flex flex-col items-start gap-3 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-900"
-        >
-          <p>No pudimos cargar tus ventas. Revisa tu conexión e inténtalo de nuevo.</p>
-          <Button asChild variant="outline" className="h-11">
-            <a href="/pescador/ventas">Reintentar</a>
-          </Button>
-        </div>
-      ) : (
-        <>
-          <dl aria-label="Resumen de pagos" className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1 rounded-xl border p-3">
-              <dt className="text-sm text-muted-foreground">Por cobrar (retenido)</dt>
-              <dd className="text-xl font-bold">{formatoDinero(porCobrar)}</dd>
-            </div>
-            <div className="flex flex-col gap-1 rounded-xl border p-3">
-              <dt className="text-sm text-muted-foreground">Cobrado</dt>
-              <dd className="text-xl font-bold">{formatoDinero(cobrado)}</dd>
-            </div>
-          </dl>
+      {/* La confirmación de Aceptar, Rechazar o Marcar entregado aparece arriba de las secciones. */}
+      <AvisoAccionProvider>
+        <Seccion id="por-responder" titulo={`Por responder (${porResponder.length})`}>
+          {porResponder.length > 0 ? (
+            <Lista pedidos={porResponder} ahora={ahora} etiqueta="Pedidos por responder" />
+          ) : (
+            <p className="text-sm text-ink-muted">No tienes pedidos por responder.</p>
+          )}
+        </Seccion>
 
-          <ListaPedidos
-            pedidos={pedidos}
-            vacio={
-              <>
-                <p className="font-medium">
-                  {pedidos.length > 0 ? "No tienes pedidos por atender." : "Aún no tienes pedidos."}
-                </p>
-                {perfil.estado === "aprobado" && (
-                  <Button asChild className="h-11">
-                    <Link href="/pescador/publicar">Publicar captura</Link>
-                  </Button>
-                )}
-              </>
-            }
-          />
-        </>
-      )}
+        <Seccion id="en-curso" titulo={`En curso (${enCurso.length})`}>
+          {enCurso.length > 0 ? (
+            <Lista pedidos={enCurso} ahora={ahora} etiqueta="Pedidos en curso" />
+          ) : (
+            <p className="text-sm text-ink-muted">No tienes pedidos en curso.</p>
+          )}
+        </Seccion>
+
+        {historial.length > 0 && (
+          <Seccion
+            id="terminados"
+            titulo={`Terminados (${historial.length === MAX_HISTORIAL ? `últimos ${MAX_HISTORIAL}` : historial.length})`}
+          >
+            <ul aria-label="Pedidos terminados" className="flex flex-col gap-3">
+              {historial.map((pedido) => (
+                <li key={pedido.id}>
+                  <TarjetaVentaCompacta pedido={pedido} ahora={ahora} />
+                </li>
+              ))}
+            </ul>
+          </Seccion>
+        )}
+      </AvisoAccionProvider>
+    </div>
+  );
+}
+
+function Seccion({ id, titulo, children }: { id: string; titulo: string; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={`titulo-${id}`} className="flex flex-col gap-3">
+      <h2 id={`titulo-${id}`} className="text-sm font-bold text-ink-muted">
+        {titulo}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function Lista({ pedidos, ahora, etiqueta }: { pedidos: MiPedido[]; ahora: Date; etiqueta: string }) {
+  return (
+    <ul aria-label={etiqueta} className="flex flex-col gap-3">
+      {pedidos.map((pedido) => (
+        <li key={pedido.id}>
+          <TarjetaVenta pedido={pedido} ahora={ahora} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Esqueleto() {
+  return (
+    <div className="flex flex-col gap-4">
+      <Titulo />
+      <EsqueletoTarjetas texto="Cargando tus ventas…" conFoto={false} />
     </div>
   );
 }

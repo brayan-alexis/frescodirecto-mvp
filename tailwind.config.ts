@@ -1,8 +1,52 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
+// Los colores son variables CSS de app/globals.css. color-mix deja funcionar los
+// modificadores de opacidad de Tailwind 3 (bg-primary/90, border-white/40) sobre ellas.
+const token = (variable: string) =>
+  `color-mix(in srgb, var(${variable}) calc(<alpha-value> * 100%), transparent)`;
+
+// Tokens del sistema de diseño (docs/ui/sistema-diseno.md): cada nombre genera
+// bg-<nombre>, text-<nombre>, border-<nombre>…
+const TOKENS = [
+  "bg",
+  "surface",
+  "surface-sunken",
+  "line",
+  "line-strong",
+  "ink",
+  "ink-muted",
+  "marea",
+  "on-marea",
+  "marea-soft",
+  "boya",
+  "boya-hover",
+  "on-boya",
+  "fresco",
+  "fresco-soft",
+  "alerta",
+  "alerta-soft",
+  "error",
+  "error-soft",
+  "focus",
+  "solicitado",
+  "solicitado-soft",
+  "aceptado",
+  "aceptado-soft",
+  "entregado",
+  "entregado-soft",
+  "recibido",
+  "recibido-soft",
+  "incidencia",
+  "incidencia-soft",
+  "rechazado",
+  "rechazado-soft",
+  "cancelado",
+  "cancelado-soft",
+];
+
 export default {
-  darkMode: ["class"],
+  darkMode: ["variant", '&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *)'],
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -12,39 +56,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        ...Object.fromEntries(TOKENS.map((nombre) => [nombre, token(`--color-${nombre}`)])),
+        background: token("--background"),
+        foreground: token("--foreground"),
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: token("--card"),
+          foreground: token("--card-foreground"),
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: token("--popover"),
+          foreground: token("--popover-foreground"),
         },
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: token("--primary"),
+          foreground: token("--primary-foreground"),
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: token("--secondary"),
+          foreground: token("--secondary-foreground"),
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: token("--muted"),
+          foreground: token("--muted-foreground"),
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: token("--accent"),
+          foreground: token("--accent-foreground"),
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: token("--destructive"),
+          foreground: token("--destructive-foreground"),
         },
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
+        border: token("--border"),
+        input: token("--input"),
+        ring: token("--ring"),
         chart: {
           "1": "hsl(var(--chart-1))",
           "2": "hsl(var(--chart-2))",
@@ -54,9 +99,18 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "var(--radius-sm)",
+        md: "var(--radius-md)",
+        lg: "var(--radius-lg)",
+      },
+      boxShadow: {
+        card: "var(--shadow-card)",
+        bar: "var(--shadow-bar)",
+      },
+      fontFamily: {
+        display: ["var(--font-playfair)", "Georgia", '"Times New Roman"', "serif"],
+        sans: ["var(--font-atkinson)", '"Segoe UI"', "system-ui", "sans-serif"],
+        mono: ["var(--font-atkinson-mono)", "ui-monospace", "Menlo", "Consolas", "monospace"],
       },
     },
   },

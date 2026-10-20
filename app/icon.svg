@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- "F" de FrescoDirecto en trazo (con serifas, como Playfair): un favicon no carga fuentes. -->
+  <rect width="64" height="64" fill="#16233F"/>
+  <path fill="#FFFFFF" d="M15 14H48V25H46L43 18.5H29V30H37L39 26H41V38H39L37 33.5H29V47.5L35 48V50H15V48L21 47.5V16.5L15 16Z"/>
+</svg>

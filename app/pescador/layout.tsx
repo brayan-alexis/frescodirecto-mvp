@@ -1,3 +1,4 @@
+import { Aviso } from "@/components/fd/aviso";
 import { obtenerPerfil } from "@/lib/sesion";
 import { Suspense } from "react";
 
@@ -22,11 +23,8 @@ async function AvisoCuentaPendiente() {
   if (perfil?.rol !== "pescador" || perfil.estado !== "pendiente") return null;
 
   return (
-    <p
-      role="status"
-      className="mb-6 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900"
-    >
-      Tu cuenta está pendiente de aprobación. Podrás publicar cuando el equipo la apruebe.
-    </p>
+    <Aviso tono="alerta" titulo="Tu cuenta está en revisión" className="mb-5">
+      <p>Podrás publicar cuando el administrador te apruebe.</p>
+    </Aviso>
   );
 }

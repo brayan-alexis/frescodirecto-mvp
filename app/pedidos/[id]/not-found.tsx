@@ -1,16 +1,18 @@
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { BotonEnlace } from "@/components/fd/boton";
+import { EstadoVacio } from "@/components/fd/estado-vacio";
+import { Receipt } from "lucide-react";
 
 export default function PedidoNoEncontrado() {
   return (
-    <div className="mx-auto flex max-w-xl flex-col items-start gap-3">
-      <h1 className="text-2xl font-bold">No encontramos ese pedido</h1>
-      <p className="text-muted-foreground">
-        Puede que el enlace esté incompleto o que el pedido no sea de tu cuenta.
-      </p>
-      <Button asChild className="h-11">
-        <Link href="/">Ir al inicio</Link>
-      </Button>
-    </div>
+    <EstadoVacio
+      icono={Receipt}
+      titulo="No encontramos ese pedido"
+      ayuda="Puede que el enlace esté incompleto o que el pedido no sea de tu cuenta."
+      accion={
+        <BotonEnlace variante="secundario" href="/">
+          Ir al inicio
+        </BotonEnlace>
+      }
+    />
   );
 }
