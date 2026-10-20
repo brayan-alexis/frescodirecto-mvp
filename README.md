@@ -5,7 +5,7 @@ Marketplace B2B de pescado del día para marisquerías de Guaymas y San Carlos, 
 Proyecto de Global Project · Maestría en Inteligencia Artificial Centrada en la Sociedad (ITSON), 2026.
 Equipo: Marco Antonio Blasco Esquer, Brayan Alexis Fajardo Ortiz e Itzel Yacquelin Beltrán Reyes.
 
-- **App en línea:** https://‹proyecto›.vercel.app
+- **App en línea:** https://frescodirecto-mvp.vercel.app
 - **Versión entregada:** `v1.0.0` (20 de octubre de 2026)
 - **Todos los datos son ficticios. Los pagos usan una pasarela de prueba: no se cobra dinero real.**
 
@@ -20,6 +20,19 @@ Equipo: Marco Antonio Blasco Esquer, Brayan Alexis Fajardo Ortiz e Itzel Yacquel
 | F5. Calificación del pescador | Restaurante | De 1 a 5 estrellas después de recibir; promedio público con 3 o más calificaciones |
 
 Soporte: registro con rol, aprobación de pescadores, resolución de disputas y reinicio de la demo desde `/admin`.
+
+## Rutas
+
+| Ruta | Para quién | Qué contiene |
+| --- | --- | --- |
+| `/` | Todos | Catálogo del día |
+| `/captura/[id]` | Todos | Detalle, pedido y pago |
+| `/login`, `/registro` | Visitante | Inicio de sesión y registro con rol |
+| `/pedidos`, `/pedidos/[id]` | Restaurante (el detalle también lo ve el pescador del pedido) | Pedidos, recepción y calificación |
+| `/pescador` | Pescador | Sus capturas y su reputación |
+| `/pescador/publicar` | Pescador | Formulario de publicación |
+| `/pescador/ventas` | Pescador | Pedidos recibidos y pagos |
+| `/admin` | Admin | Pescadores pendientes, disputas y reinicio de la demo |
 
 ## Stack
 
@@ -44,6 +57,7 @@ Next.js 16 (App Router, TypeScript, Tailwind) en Vercel · Supabase (Postgres co
 
   La app nunca pide números de tarjeta.
 - **Automática (reglas, permisos y dinero):** pegar `supabase/pruebas/pruebas_reglas.sql` en el SQL Editor. Con `psql` se ven 32 avisos "cumple"; el SQL Editor suele mostrar solo "Success. No rows returned". En ambos casos, éxito = ningún error. No deja cambios.
+- **Manual (P01–P10):** seguir `docs/pruebas-manuales.md`, con cuentas demo y el nombre de cada evidencia.
 - **Reiniciar el escenario:** `select public.cargar_datos_demo();` o el botón Reiniciar demo del administrador.
 
 ## Cuentas demo
